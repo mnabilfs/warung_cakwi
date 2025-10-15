@@ -1,16 +1,14 @@
-# gerai_bakso
+# 🍜 Warung Cakwi — Aplikasi Flutter Responsif dengan Animasi Ringan
 
-A new Flutter project.
+Proyek ini merupakan implementasi **Modul 2 (P1 & P2)** dari mata kuliah **Pemrograman Mobile**, dengan topik:
+> *"Responsivitas UI dan Konsumsi Daya Animasi pada Flutter"*
 
-## Getting Started
+Aplikasi ini menampilkan simulasi toko makanan bernama **Warung Cakwi**, dengan fitur utama berupa daftar menu makanan, animasi ringan, tampilan responsif untuk berbagai ukuran layar, serta keranjang belanja interaktif.
 
-This project is a starting point for a Flutter application.
+---
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🧭 Tujuan Pembelajaran
+1. Menerapkan **layout responsif** menggunakan `LayoutBuilder` dan `MediaQuery`.
+2. Menerapkan **animasi ringan** menggunakan `AnimatedContainer` dan `Hero`.
+3. Memahami **pengaruh animasi terhadap konsumsi daya & performa UI**.
+4. Menggunakan **stateful widget** untuk mengelola interaksi pengguna (mis. keranjang belanja).
