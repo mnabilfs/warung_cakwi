@@ -5,19 +5,18 @@ import '../models/menu_item.dart';
 import 'cart_page.dart';
 
 class LandingPage extends StatefulWidget {
-  const LandingPage({Key? key}) : super(key: key);
+  const LandingPage({super.key});
 
   @override
   State<LandingPage> createState() => _LandingPageState();
 }
 
 class _LandingPageState extends State<LandingPage> {
-  static final List<MenuItem> _cartItems = [];
+  // NON-STATIC: state nyata milik halaman ini
+  final List<MenuItem> _cartItems = [];
 
   void _addToCart(MenuItem item) {
-    setState(() {
-      _cartItems.add(item);
-    });
+    setState(() => _cartItems.add(item));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${item.name} ditambahkan ke keranjang'),
@@ -26,20 +25,30 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  void _navigateToCart() {
-    Navigator.push(
+  /// Navigasi ke halaman cart.
+  /// Await agar ketika kembali, landing page bisa memastikan tampilannya telah
+  /// diperbarui (mis. badge).
+  Future<void> _navigateToCart() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CartPage(
+          // KIRIMKAN REFERENSI list, bukan salinan.
           cartItems: _cartItems,
           onRemoveItem: (index) {
+            // callback dari CartPage: hapus di sini supaya sumber kebenaran (single source of truth)
             setState(() {
-              _cartItems.removeAt(index);
+              if (index >= 0 && index < _cartItems.length) {
+                _cartItems.removeAt(index);
+              }
             });
           },
         ),
       ),
     );
+
+    // Pastikan rebuild setelah kembali dari CartPage (badge, dsb.)
+    setState(() {});
   }
 
   @override
@@ -53,40 +62,49 @@ class _LandingPageState extends State<LandingPage> {
         backgroundColor: Colors.orange[700],
         elevation: 0,
         actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.shopping_cart),
-                onPressed: _navigateToCart,
-              ),
-              if (_cartItems.isNotEmpty)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 18,
-                      minHeight: 18,
-                    ),
-                    child: Text(
-                      '${_cartItems.length}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // IconButton tetap bisa menerima tap sepenuhnya
+                IconButton(
+                  icon: const Icon(Icons.shopping_cart),
+                  onPressed: _navigateToCart,
+                  tooltip: 'Lihat Keranjang',
+                ),
+
+                // Badge: jangan menyerap pointer agar IconButton tidak terganggu
+                if (_cartItems.isNotEmpty)
+                  Positioned(
+                    right: 6,
+                    top: 8,
+                    child: IgnorePointer(
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: Text(
+                          '${_cartItems.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(width: 8),
         ],
       ),
       drawer: _buildDrawer(context),
@@ -96,60 +114,100 @@ class _LandingPageState extends State<LandingPage> {
           children: [
             _buildBanner(),
             const SizedBox(height: 20),
-            _buildMenuSection(
-              'Bakso',
-              [
-                MenuItem('Bakso Urat', 'Bakso dengan urat sapi pilihan', 15000,
-                    Icons.soup_kitchen),
-                MenuItem('Bakso Campur', 'Bakso campur komplit', 18000,
-                    Icons.ramen_dining),
-                MenuItem('Bakso Telur', 'Bakso dengan telur puyuh', 16000,
-                    Icons.egg),
-                MenuItem(
-                    'Bakso Jumbo', 'Bakso ukuran jumbo', 20000, Icons.dining),
-              ],
-              _addToCart,
-            ),
-            _buildMenuSection(
-              'Mie Ayam',
-              [
-                MenuItem('Mie Ayam Original', 'Mie ayam dengan topping ayam',
-                    12000, Icons.ramen_dining),
-                MenuItem('Mie Ayam Bakso', 'Mie ayam dengan bakso', 15000,
-                    Icons.restaurant),
-                MenuItem('Mie Ayam Pangsit', 'Mie ayam dengan pangsit goreng',
-                    14000, Icons.fastfood),
-                MenuItem('Mie Ayam Komplit', 'Mie ayam komplit semua topping',
-                    18000, Icons.dinner_dining),
-              ],
-              _addToCart,
-            ),
-            _buildMenuSection(
-              'Minuman',
-              [
-                MenuItem('Es Teh Manis', 'Teh manis dingin segar', 3000,
-                    Icons.local_drink),
-                MenuItem('Es Jeruk', 'Jeruk peras segar', 5000,
-                    Icons.emoji_food_beverage),
-                MenuItem('Teh Hangat', 'Teh hangat nikmat', 2000, Icons.coffee),
-                MenuItem(
-                    'Air Mineral', 'Air mineral botol', 3000, Icons.water_drop),
-              ],
-              _addToCart,
-            ),
-            _buildMenuSection(
-              'Menu Lainnya',
-              [
-                MenuItem('Siomay', 'Siomay dengan saus kacang', 10000,
-                    Icons.set_meal),
-                MenuItem('Batagor', 'Batagor goreng renyah', 12000,
-                    Icons.restaurant_menu),
-                MenuItem('Kerupuk', 'Kerupuk udang renyah', 2000, Icons.cookie),
-                MenuItem('Sambal Extra', 'Sambal pedas mantap', 1000,
-                    Icons.local_fire_department),
-              ],
-              _addToCart,
-            ),
+            _buildMenuSection('Bakso', [
+              MenuItem(
+                'Bakso Urat',
+                'Bakso dengan urat sapi pilihan',
+                15000,
+                Icons.soup_kitchen,
+              ),
+              MenuItem(
+                'Bakso Campur',
+                'Bakso campur komplit',
+                18000,
+                Icons.ramen_dining,
+              ),
+              MenuItem(
+                'Bakso Telur',
+                'Bakso dengan telur puyuh',
+                16000,
+                Icons.egg,
+              ),
+              MenuItem(
+                'Bakso Jumbo',
+                'Bakso ukuran jumbo',
+                20000,
+                Icons.dining,
+              ),
+            ], _addToCart),
+            _buildMenuSection('Mie Ayam', [
+              MenuItem(
+                'Mie Ayam Original',
+                'Mie ayam dengan topping ayam',
+                12000,
+                Icons.ramen_dining,
+              ),
+              MenuItem(
+                'Mie Ayam Bakso',
+                'Mie ayam dengan bakso',
+                15000,
+                Icons.restaurant,
+              ),
+              MenuItem(
+                'Mie Ayam Pangsit',
+                'Mie ayam dengan pangsit goreng',
+                14000,
+                Icons.fastfood,
+              ),
+              MenuItem(
+                'Mie Ayam Komplit',
+                'Mie ayam komplit semua topping',
+                18000,
+                Icons.dinner_dining,
+              ),
+            ], _addToCart),
+            _buildMenuSection('Minuman', [
+              MenuItem(
+                'Es Teh Manis',
+                'Teh manis dingin segar',
+                3000,
+                Icons.local_drink,
+              ),
+              MenuItem(
+                'Es Jeruk',
+                'Jeruk peras segar',
+                5000,
+                Icons.emoji_food_beverage,
+              ),
+              MenuItem('Teh Hangat', 'Teh hangat nikmat', 2000, Icons.coffee),
+              MenuItem(
+                'Air Mineral',
+                'Air mineral botol',
+                3000,
+                Icons.water_drop,
+              ),
+            ], _addToCart),
+            _buildMenuSection('Menu Lainnya', [
+              MenuItem(
+                'Siomay',
+                'Siomay dengan saus kacang',
+                10000,
+                Icons.set_meal,
+              ),
+              MenuItem(
+                'Batagor',
+                'Batagor goreng renyah',
+                12000,
+                Icons.restaurant_menu,
+              ),
+              MenuItem('Kerupuk', 'Kerupuk udang renyah', 2000, Icons.cookie),
+              MenuItem(
+                'Sambal Extra',
+                'Sambal pedas mantap',
+                1000,
+                Icons.local_fire_department,
+              ),
+            ], _addToCart),
             const SizedBox(height: 20),
           ],
         ),
@@ -157,6 +215,9 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
+  // -------------------------
+  // Helper widgets (banner, drawer, menu section)
+  // -------------------------
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       child: ListView(
@@ -194,9 +255,7 @@ class _LandingPageState extends State<LandingPage> {
           ListTile(
             leading: const Icon(Icons.home, color: Colors.orange),
             title: const Text('Beranda'),
-            onTap: () {
-              Navigator.pop(context);
-            },
+            onTap: () => Navigator.pop(context),
           ),
           const Divider(),
           ListTile(
@@ -223,9 +282,7 @@ class _LandingPageState extends State<LandingPage> {
             leading: const Icon(Icons.access_time, color: Colors.blue),
             title: const Text('Jam Operasional'),
             subtitle: const Text('Setiap Hari: 08.00 - 21.00'),
-            onTap: () {
-              Navigator.pop(context);
-            },
+            onTap: () => Navigator.pop(context),
           ),
         ],
       ),
@@ -303,8 +360,11 @@ class _LandingPageState extends State<LandingPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.restaurant_menu,
-                    size: 60, color: Colors.white),
+                const Icon(
+                  Icons.restaurant_menu,
+                  size: 60,
+                  color: Colors.white,
+                ),
                 const SizedBox(height: 10),
                 const Text(
                   'Selamat Datang',
@@ -317,15 +377,14 @@ class _LandingPageState extends State<LandingPage> {
                 const SizedBox(height: 5),
                 const Text(
                   'Nikmati Kelezatan Warung Cakwi',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
                 const SizedBox(height: 15),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -346,173 +405,195 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  // 🟠 BAGIAN YANG DIUBAH UNTUK RESPONSIVE
-  // 🟠 BAGIAN YANG DIUBAH UNTUK RESPONSIVE
-Widget _buildMenuSection(
-    String title, List<MenuItem> items, Function(MenuItem) onAddToCart) {
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      // jika lebar layar > 600 (tablet / landscape) maka 2 kolom
-      bool isWide = constraints.maxWidth > 600;
-      int crossAxisCount = isWide ? 2 : 1;
+  // -------------------------
+  // Responsive menu section using LayoutBuilder (sesuai Modul 2)
+  // -------------------------
+  Widget _buildMenuSection(
+    String title,
+    List<MenuItem> items,
+    Function(MenuItem) onAddToCart,
+  ) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isWide = constraints.maxWidth > 600;
+        final int crossAxisCount = isWide ? 2 : 1;
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: Colors.orange[700],
-                    borderRadius: BorderRadius.circular(2),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: Colors.orange[700],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange[800],
+                  const SizedBox(width: 10),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange[800],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: items.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: isWide ? 2.3 : 2.7,
-            ),
-            itemBuilder: (context, index) {
-              final menuItem = items[index];
-              return MenuCard(
-                item: menuItem,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      transitionDuration: const Duration(milliseconds: 600),
-                      pageBuilder:
-                          (context, animation, secondaryAnimation) => Scaffold(
-                        appBar: AppBar(
-                          title: Text(menuItem.name),
-                          backgroundColor: Colors.orange[700],
-                        ),
-                        body: Center(
-                          child: Hero(
-                            tag: menuItem.name,
-                            child: Material(
-                              color: Colors.transparent,
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final screenWidth =
-                                      MediaQuery.of(context).size.width;
-                                  final screenHeight =
-                                      MediaQuery.of(context).size.height;
-                                  final isLandscape = MediaQuery.of(context)
-                                          .orientation ==
-                                      Orientation.landscape;
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: items.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: isWide ? 2.3 : 2.7,
+              ),
+              itemBuilder: (context, index) {
+                final menuItem = items[index];
+                return MenuCard(
+                  item: menuItem,
+                  onTap: () {
+                    // buka detail pop-up responsif
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        transitionDuration: const Duration(milliseconds: 600),
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            Scaffold(
+                              appBar: AppBar(
+                                title: Text(menuItem.name),
+                                backgroundColor: Colors.orange[700],
+                              ),
+                              body: Center(
+                                child: Hero(
+                                  tag: menuItem.name,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        final screenWidth = MediaQuery.of(
+                                          context,
+                                        ).size.width;
+                                        final screenHeight = MediaQuery.of(
+                                          context,
+                                        ).size.height;
+                                        final isLandscape =
+                                            MediaQuery.of(
+                                              context,
+                                            ).orientation ==
+                                            Orientation.landscape;
 
-                                  // ukuran maksimum popup responsif
-                                  final double popupWidth =
-                                      isLandscape ? screenWidth * 0.5 : screenWidth * 0.8;
-                                  final double popupHeight =
-                                      isLandscape ? screenHeight * 0.7 : screenHeight * 0.8;
+                                        final double popupWidth = isLandscape
+                                            ? screenWidth * 0.5
+                                            : screenWidth * 0.8;
+                                        final double popupHeight = isLandscape
+                                            ? screenHeight * 0.7
+                                            : screenHeight * 0.8;
 
-                                  return Container(
-                                    width: popupWidth,
-                                    constraints: BoxConstraints(
-                                        maxHeight: popupHeight),
-                                    padding: const EdgeInsets.all(20),
-                                    margin: const EdgeInsets.all(20),
-                                    decoration: BoxDecoration(
-                                      color: Colors.orange[50],
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: SingleChildScrollView(
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(menuItem.icon,
-                                              size: 100,
-                                              color: Colors.orange[700]),
-                                          const SizedBox(height: 20),
-                                          Text(
-                                            menuItem.name,
-                                            style: const TextStyle(
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.bold),
+                                        return Container(
+                                          width: popupWidth,
+                                          constraints: BoxConstraints(
+                                            maxHeight: popupHeight,
                                           ),
-                                          const SizedBox(height: 10),
-                                          Text(
-                                            menuItem.description,
-                                            textAlign: TextAlign.center,
-                                            style:
-                                                const TextStyle(fontSize: 16),
-                                          ),
-                                          const SizedBox(height: 20),
-                                          Text(
-                                            'Harga: Rp ${menuItem.price}',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              color: Colors.orange[700],
-                                              fontWeight: FontWeight.bold,
+                                          padding: const EdgeInsets.all(20),
+                                          margin: const EdgeInsets.all(20),
+                                          decoration: BoxDecoration(
+                                            color: Colors.orange[50],
+                                            borderRadius: BorderRadius.circular(
+                                              20,
                                             ),
                                           ),
-                                          const SizedBox(height: 20),
-                                          ElevatedButton.icon(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  Colors.orange[700],
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  menuItem.icon,
+                                                  size: 100,
+                                                  color: Colors.orange[700],
+                                                ),
+                                                const SizedBox(height: 20),
+                                                Text(
+                                                  menuItem.name,
+                                                  style: const TextStyle(
+                                                    fontSize: 24,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 10),
+                                                Text(
+                                                  menuItem.description,
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                const SizedBox(height: 20),
+                                                Text(
+                                                  'Harga: Rp ${_formatPrice(menuItem.price)}',
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    color: Colors.orange[700],
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 20),
+                                                ElevatedButton.icon(
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            Colors.orange[700],
+                                                      ),
+                                                  onPressed: () {
+                                                    onAddToCart(menuItem);
+                                                    Navigator.pop(context);
+                                                  },
+                                                  icon: const Icon(
+                                                    Icons.add_shopping_cart,
+                                                  ),
+                                                  label: const Text(
+                                                    'Tambah ke Keranjang',
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            onPressed: () {
-                                              onAddToCart(menuItem);
-                                              Navigator.pop(context);
-                                            },
-                                            icon: const Icon(
-                                                Icons.add_shopping_cart),
-                                            label: const Text(
-                                                'Tambah ke Keranjang'),
                                           ),
-                                        ],
-                                      ),
+                                        );
+                                      },
                                     ),
-                                  );
-                                },
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
                       ),
-                      transitionsBuilder:
-                          (context, animation, secondaryAnimation, child) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        );
-                      },
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-        ],
-      );
-    },
-  );
-}
+                    );
+                  },
+                );
+              },
+            ),
+            const SizedBox(height: 10),
+          ],
+        );
+      },
+    );
+  }
 
+  String _formatPrice(int price) {
+    return price.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+  }
 }

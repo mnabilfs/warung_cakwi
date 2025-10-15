@@ -1,13 +1,10 @@
-// main.dart
 import 'package:flutter/material.dart';
 import 'pages/landing_page.dart';
 
-void main() {
-  runApp(const WarungCakwiApp());
-}
+void main() => runApp(const WarungCakwiApp());
 
 class WarungCakwiApp extends StatelessWidget {
-  const WarungCakwiApp({Key? key}) : super(key: key);
+  const WarungCakwiApp({super.key});
 
   @override
   Widget build(BuildContext context) {
