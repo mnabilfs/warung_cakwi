@@ -1,23 +1,24 @@
+// main.dart
 import 'package:flutter/material.dart';
-import 'package:gerai_bakso/pages/landing_page.dart';
+import 'pages/landing_page.dart';
 
 void main() {
-  runApp(const BaksoApp());
+  runApp(const WarungCakwiApp());
 }
 
-class BaksoApp extends StatelessWidget {
-  const BaksoApp({super.key});
+class WarungCakwiApp extends StatelessWidget {
+  const WarungCakwiApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Warung Ojalali Cakwi',
+      title: 'Warung Cakwi',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.deepOrange,
-        useMaterial3: true,
+        primarySwatch: Colors.orange,
+        scaffoldBackgroundColor: Colors.grey[50],
       ),
-       home: const LandingPage(),
+      home: const LandingPage(),
     );
   }
 }
