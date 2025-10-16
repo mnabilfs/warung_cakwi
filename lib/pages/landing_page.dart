@@ -97,11 +97,8 @@ class _LandingPageState extends State<LandingPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const AppBanner(
-              backgroundImage:
-                  'assets/images/Menu Bakso dan Mie Ayam.png', // sesuaikan nama file 
-            ),
-            const SizedBox(height: 20),
+            const AppBanner(),
+              const SizedBox(height: 20),
             MenuSection(
               title: 'Bakso',
               items: _baksoMenu,
