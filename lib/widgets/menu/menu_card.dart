@@ -84,7 +84,7 @@ class _MenuCardState extends State<MenuCard> with SingleTickerProviderStateMixin
                 ],
               ),
               child: ListTile(
-                contentPadding: const EdgeInsets.all(12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 30),
                 leading: Hero(
                   tag: widget.item.name,
                   child: CircleAvatar(

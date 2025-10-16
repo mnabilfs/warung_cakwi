@@ -17,7 +17,6 @@ class WarungCakwiApp extends StatelessWidget {
         colorScheme: ColorScheme.dark(
           primary: const Color(0xFFD4A017),
           secondary: const Color(0xFFD4A017),
-          background: const Color(0xFF1A1A1A),
           surface: const Color(0xFF2D2D2D),
         ),
       ),
