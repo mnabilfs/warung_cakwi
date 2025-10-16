@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Model data untuk item menu
 class MenuItem {
   final String name;
   final String description;

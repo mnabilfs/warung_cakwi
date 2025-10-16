@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../utils/price_formatter.dart';
 
-/// Widget untuk menampilkan total harga dan tombol checkout
 class CartTotalSection extends StatelessWidget {
   final int itemCount;
   final int totalPrice;
@@ -33,42 +33,18 @@ class CartTotalSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Total Item:',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                '$itemCount item',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+              const Text('Total Item:', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: Colors.white)),
+              Text('$itemCount item', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
             ],
           ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Total Harga:',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Colors.white,
-                ),
-              ),
+              const Text('Total Harga:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
               Text(
-                'Rp ${_formatPrice(totalPrice)}',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFD4A017),
-                ),
+                'Rp ${PriceFormatter.format(totalPrice)}',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFD4A017)),
               ),
             ],
           ),
@@ -78,23 +54,13 @@ class CartTotalSection extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFD4A017),
               foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               padding: const EdgeInsets.symmetric(vertical: 15),
             ),
-            child: const Text(
-              'Checkout',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
+            child: const Text('Checkout', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           ),
         ],
       ),
     );
   }
-
-  String _formatPrice(int price) => price.toString().replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (Match m) => '${m[1]}.',
-      );
 }

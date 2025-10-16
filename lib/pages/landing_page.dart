@@ -20,20 +20,11 @@ class _LandingPageState extends State<LandingPage> {
     setState(() => _cartItems.add(item));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          '${item.name} ditambahkan ke keranjang',
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        content: Text('${item.name} ditambahkan ke keranjang', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
         backgroundColor: const Color(0xFF2D2D2D),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: const BorderSide(color: Color(0xFFD4A017), width: 1),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: const BorderSide(color: Color(0xFFD4A017), width: 1)),
       ),
     );
   }
@@ -62,19 +53,11 @@ class _LandingPageState extends State<LandingPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A1A),
       appBar: AppBar(
-        title: const Text(
-          'Bakso Ojolali Cakwi',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD4A017)),
-        ),
+        title: const Text('Bakso Ojolali Cakwi', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD4A017))),
         backgroundColor: const Color(0xFF2D2D2D),
         iconTheme: const IconThemeData(color: Color(0xFFD4A017)),
         elevation: 0,
-        actions: [
-          CartButton(
-            itemCount: _cartItems.length,
-            onPressed: _navigateToCart,
-          ),
-        ],
+        actions: [CartButton(itemCount: _cartItems.length, onPressed: _navigateToCart)],
       ),
       drawer: const AppDrawer(),
       body: SingleChildScrollView(
@@ -83,26 +66,10 @@ class _LandingPageState extends State<LandingPage> {
           children: [
             const AppBanner(),
             const SizedBox(height: 20),
-            MenuSection(
-              title: 'Bakso',
-              items: _baksoMenu,
-              onAddToCart: _addToCart,
-            ),
-            MenuSection(
-              title: 'Mie Ayam',
-              items: _mieAyamMenu,
-              onAddToCart: _addToCart,
-            ),
-            MenuSection(
-              title: 'Minuman',
-              items: _minumanMenu,
-              onAddToCart: _addToCart,
-            ),
-            MenuSection(
-              title: 'Menu Lainnya',
-              items: _menuLainnya,
-              onAddToCart: _addToCart,
-            ),
+            MenuSection(title: 'Bakso', items: _baksoMenu, onAddToCart: _addToCart),
+            MenuSection(title: 'Mie Ayam', items: _mieAyamMenu, onAddToCart: _addToCart),
+            MenuSection(title: 'Minuman', items: _minumanMenu, onAddToCart: _addToCart),
+            MenuSection(title: 'Menu Lainnya', items: _menuLainnya, onAddToCart: _addToCart),
             const SizedBox(height: 20),
           ],
         ),
@@ -110,7 +77,6 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  // Data menu items sesuai gambar menu
   final List<MenuItem> _baksoMenu = const [
     MenuItem('Bakso Campur', 'Bakso campur komplit', 10000, Icons.soup_kitchen),
     MenuItem('Bakso Kasar Besar', 'Bakso kasar ukuran besar', 5000, Icons.ramen_dining),

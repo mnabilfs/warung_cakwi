@@ -43,7 +43,7 @@ class MenuSection extends StatelessWidget {
             width: 4,
             height: 24,
             decoration: BoxDecoration(
-              color: const Color(0xFFD4A017), // Kuning emas
+              color: const Color(0xFFD4A017),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -53,7 +53,7 @@ class MenuSection extends StatelessWidget {
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Color(0xFFD4A017), // Kuning emas
+              color: Color(0xFFD4A017),
             ),
           ),
         ],
@@ -87,17 +87,14 @@ class MenuSection extends StatelessWidget {
     Navigator.push(
       context,
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 600),
+        transitionDuration: const Duration(milliseconds: 300),
         pageBuilder: (context, animation, secondaryAnimation) =>
             MenuDetailDialog(
           menuItem: menuItem,
           onAddToCart: onAddToCart,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
+          return FadeTransition(opacity: animation, child: child);
         },
       ),
     );

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Dialog untuk menampilkan informasi lokasi toko
 class LocationDialog {
-  // Koordinat lokasi Warung Cakwi
   static const double latitude = -7.901906;
   static const double longitude = 112.582788;
 
@@ -16,10 +14,7 @@ class LocationDialog {
           children: const [
             Icon(Icons.location_on, color: Colors.red),
             SizedBox(width: 10),
-            Text(
-              'Lokasi Warung Cakwi',
-              style: TextStyle(color: Color(0xFFD4A017)),
-            ),
+            Text('Lokasi Warung Cakwi', style: TextStyle(color: Color(0xFFD4A017))),
           ],
         ),
         content: Column(
@@ -40,10 +35,7 @@ class LocationDialog {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Tutup',
-              style: TextStyle(color: Colors.white70),
-            ),
+            child: const Text('Tutup', style: TextStyle(color: Colors.white70)),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -51,13 +43,8 @@ class LocationDialog {
               _openGoogleMaps(context);
             },
             icon: const Icon(Icons.map, color: Colors.black),
-            label: const Text(
-              'Buka Maps',
-              style: TextStyle(color: Colors.black),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFD4A017),
-            ),
+            label: const Text('Buka Maps', style: TextStyle(color: Colors.black)),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD4A017)),
           ),
         ],
       ),
@@ -76,12 +63,8 @@ class LocationDialog {
     for (String urlString in urlSchemes) {
       try {
         final Uri url = Uri.parse(urlString);
-
         if (await canLaunchUrl(url)) {
-          await launchUrl(
-            url,
-            mode: LaunchMode.externalApplication,
-          );
+          await launchUrl(url, mode: LaunchMode.externalApplication);
           opened = true;
           break;
         }
@@ -93,9 +76,7 @@ class LocationDialog {
     if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Tidak dapat membuka Google Maps. Pastikan aplikasi Maps terinstall.',
-          ),
+          content: Text('Tidak dapat membuka Google Maps. Pastikan aplikasi Maps terinstall.'),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 3),
         ),

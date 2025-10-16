@@ -4,7 +4,6 @@ import '../widgets/app/drawer_menu_item.dart';
 import '../widgets/app/location_dialog.dart';
 import '../widgets/app/whatsapp_launcher.dart';
 
-/// Drawer navigasi utama - FILE UTAMA
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 

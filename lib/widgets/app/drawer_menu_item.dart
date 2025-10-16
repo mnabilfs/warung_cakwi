@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Widget untuk item menu di drawer
 class DrawerMenuItem extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -21,16 +20,8 @@ class DrawerMenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: iconColor),
-      title: Text(
-        title,
-        style: const TextStyle(color: Colors.white),
-      ),
-      subtitle: subtitle != null
-          ? Text(
-              subtitle!,
-              style: const TextStyle(color: Colors.white60),
-            )
-          : null,
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+      subtitle: subtitle != null ? Text(subtitle!, style: const TextStyle(color: Colors.white60)) : null,
       onTap: onTap,
     );
   }
