@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/menu_item.dart';
+import '../../models/menu_item.dart';
 import 'menu_card.dart';
 import 'menu_detail_dialog.dart';
 
@@ -43,17 +43,17 @@ class MenuSection extends StatelessWidget {
             width: 4,
             height: 24,
             decoration: BoxDecoration(
-              color: Colors.orange[700],
+              color: const Color(0xFFD4A017), // Kuning emas
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(width: 10),
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Colors.orange[800],
+              color: Color(0xFFD4A017), // Kuning emas
             ),
           ),
         ],

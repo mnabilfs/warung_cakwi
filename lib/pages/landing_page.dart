@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_banner.dart';
-import '../widgets/app_drawer.dart';
-import '../widgets/cart_button.dart';
-import '../widgets/menu_section.dart';
+import '../widgets/banner.dart';
+import 'app_drawer.dart';
+import '../widgets/cart/cart_button.dart';
+import '../widgets/menu/menu_section.dart';
 import '../models/menu_item.dart';
 import 'cart_page.dart';
 
@@ -20,8 +20,20 @@ class _LandingPageState extends State<LandingPage> {
     setState(() => _cartItems.add(item));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${item.name} ditambahkan ke keranjang'),
-        duration: const Duration(seconds: 1),
+        content: Text(
+          '${item.name} ditambahkan ke keranjang',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        backgroundColor: const Color(0xFF2D2D2D),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: const BorderSide(color: Color(0xFFD4A017), width: 1),
+        ),
       ),
     );
   }
@@ -48,12 +60,14 @@ class _LandingPageState extends State<LandingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF1A1A1A),
       appBar: AppBar(
         title: const Text(
-          'Warung Cakwi',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          'Bakso Ojolali Cakwi',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD4A017)),
         ),
-        backgroundColor: Colors.orange[700],
+        backgroundColor: const Color(0xFF2D2D2D),
+        iconTheme: const IconThemeData(color: Color(0xFFD4A017)),
         elevation: 0,
         actions: [
           CartButton(
@@ -96,32 +110,33 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  // Data menu items
+  // Data menu items sesuai gambar menu
   final List<MenuItem> _baksoMenu = const [
-    MenuItem('Bakso Urat', 'Bakso dengan urat sapi pilihan', 15000, Icons.soup_kitchen),
-    MenuItem('Bakso Campur', 'Bakso campur komplit', 18000, Icons.ramen_dining),
-    MenuItem('Bakso Telur', 'Bakso dengan telur puyuh', 16000, Icons.egg),
-    MenuItem('Bakso Jumbo', 'Bakso ukuran jumbo', 20000, Icons.dining),
+    MenuItem('Bakso Campur', 'Bakso campur komplit', 10000, Icons.soup_kitchen),
+    MenuItem('Bakso Kasar Besar', 'Bakso kasar ukuran besar', 5000, Icons.ramen_dining),
+    MenuItem('Bakso Kasar Sedang', 'Bakso kasar ukuran sedang', 3000, Icons.dining),
+    MenuItem('Bakso Halus Sedang', 'Bakso halus ukuran sedang', 3000, Icons.restaurant),
+    MenuItem('Bakso Krikil', 'Bakso krikil', 1000, Icons.fastfood),
+    MenuItem('DLL', 'Dan lain-lain', 1000, Icons.more_horiz),
   ];
 
   final List<MenuItem> _mieAyamMenu = const [
-    MenuItem('Mie Ayam Original', 'Mie ayam dengan topping ayam', 12000, Icons.ramen_dining),
+    MenuItem('Mie Ayam Biasa', 'Mie ayam original', 10000, Icons.ramen_dining),
     MenuItem('Mie Ayam Bakso', 'Mie ayam dengan bakso', 15000, Icons.restaurant),
-    MenuItem('Mie Ayam Pangsit', 'Mie ayam dengan pangsit goreng', 14000, Icons.fastfood),
-    MenuItem('Mie Ayam Komplit', 'Mie ayam komplit semua topping', 18000, Icons.dinner_dining),
   ];
 
   final List<MenuItem> _minumanMenu = const [
-    MenuItem('Es Teh Manis', 'Teh manis dingin segar', 3000, Icons.local_drink),
+    MenuItem('Es Teh', 'Teh manis dingin segar', 5000, Icons.local_drink),
     MenuItem('Es Jeruk', 'Jeruk peras segar', 5000, Icons.emoji_food_beverage),
-    MenuItem('Teh Hangat', 'Teh hangat nikmat', 2000, Icons.coffee),
-    MenuItem('Air Mineral', 'Air mineral botol', 3000, Icons.water_drop),
+    MenuItem('Es Sogem', 'Es sogem segar', 10000, Icons.water_drop),
+    MenuItem('Kopi', 'Kopi nikmat', 5000, Icons.coffee),
+    MenuItem('Teh Hangat', 'Teh hangat nikmat', 4000, Icons.local_cafe),
+    MenuItem('Jeruk Hangat', 'Jeruk hangat', 4000, Icons.coffee_maker),
   ];
 
   final List<MenuItem> _menuLainnya = const [
-    MenuItem('Siomay', 'Siomay dengan saus kacang', 10000, Icons.set_meal),
-    MenuItem('Batagor', 'Batagor goreng renyah', 12000, Icons.restaurant_menu),
-    MenuItem('Kerupuk', 'Kerupuk udang renyah', 2000, Icons.cookie),
-    MenuItem('Sambal Extra', 'Sambal pedas mantap', 1000, Icons.local_fire_department),
+    MenuItem('Cuanki', 'Cuanki enak', 10000, Icons.set_meal),
+    MenuItem('Siomay', 'Siomay dengan saus kacang', 10000, Icons.restaurant_menu),
+    MenuItem('Batagor', 'Batagor goreng renyah', 10000, Icons.fastfood),
   ];
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/menu_item.dart';
+import '../../models/menu_item.dart';
 
 /// Widget kartu menu dengan efek animasi halus saat ditekan
 class MenuCard extends StatefulWidget {
@@ -29,11 +29,15 @@ class _MenuCardState extends State<MenuCard> {
         curve: Curves.easeInOut,
         transform: Matrix4.identity()..scale(_isPressed ? 0.97 : 1.0),
         decoration: BoxDecoration(
-          color: _isPressed ? Colors.orange[50] : Colors.white,
+          color: _isPressed ? const Color(0xFF3D3D3D) : const Color(0xFF2D2D2D),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFFD4A017).withOpacity(_isPressed ? 0.5 : 0.2),
+            width: 1.5,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.orange.withOpacity(_isPressed ? 0.4 : 0.2),
+              color: const Color(0xFFD4A017).withOpacity(_isPressed ? 0.3 : 0.1),
               blurRadius: _isPressed ? 10 : 5,
               offset: const Offset(0, 3),
             ),
@@ -45,21 +49,25 @@ class _MenuCardState extends State<MenuCard> {
             tag: widget.item.name,
             child: CircleAvatar(
               radius: 30,
-              backgroundColor: Colors.orange[100],
+              backgroundColor: const Color(0xFF3D3D3D),
               child: Icon(
                 widget.item.icon,
-                color: Colors.orange[700],
+                color: const Color(0xFFD4A017),
                 size: 30,
               ),
             ),
           ),
           title: Text(
             widget.item.name,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Colors.white,
+            ),
           ),
           subtitle: Text(
             widget.item.description,
-            style: const TextStyle(fontSize: 13, color: Colors.grey),
+            style: const TextStyle(fontSize: 13, color: Colors.white60),
           ),
           trailing: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -67,8 +75,8 @@ class _MenuCardState extends State<MenuCard> {
             children: [
               Text(
                 'Rp ${_formatPrice(widget.item.price)}',
-                style: TextStyle(
-                  color: Colors.orange[700],
+                style: const TextStyle(
+                  color: Color(0xFFD4A017),
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -76,7 +84,7 @@ class _MenuCardState extends State<MenuCard> {
               const SizedBox(height: 5),
               const Icon(
                 Icons.add_shopping_cart,
-                color: Colors.orange,
+                color: Color(0xFFD4A017),
                 size: 20,
               ),
             ],

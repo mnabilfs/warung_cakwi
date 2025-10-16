@@ -1,4 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+    </queries>
+    
     <application
         android:label="gerai_bakso"
         android:name="${applicationName}"
@@ -29,7 +40,7 @@
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
             android:name="flutterEmbedding"
-            android:value="2" />
+            android:value="2" />                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
