@@ -1,28 +1,43 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'api_service_http.dart' as http_service;
+import 'api_service_dio.dart' as dio_service;
 import '../models/menu_item.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://warungcakwiapi.a.pinggy.link/api/parfums';
+  static bool useDio = true; // ubah ini untuk beralih mode || true = Dio, false = HTTP
 
   static Future<List<MenuItem>> fetchMenuItems() async {
-    final response = await http.get(Uri.parse(baseUrl));
+    if (useDio) {
+      return await dio_service.ApiServiceDio.fetchMenuItems();
+    } else {
+      return await http_service.ApiServiceHttp.fetchMenuItems();
+    }
+  }
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final List<dynamic> items = data['data'];
+  // Tambahkan di sini fungsi chaining
+  static Future<void> loadAndProcessMenu() async {
+    try {
+      print('⏳ [CHAINED] Mulai memuat dan memproses data...');
 
-      return items.map((item) {
+      // ✅ ini otomatis akan pakai yang aktif (Dio / HTTP)
+      final items = await fetchMenuItems();
+      print('✅ [CHAINED] Data menu berhasil diambil (${items.length} item)');
+
+      final processedItems = items.map((item) {
+        final updatedPrice = (item.price * 1.1).toInt();
         return MenuItem(
-          item['name'],
-          item['description'],
-          item['price'].toDouble(),
-          null, // kalau pakai icon, nanti bisa diatur
-          imageUrl: item['image'], // tambahkan properti baru ke model
+          item.name,
+          '${item.description} (markup)',
+          updatedPrice,
+          item.icon,
+          imageUrl: item.imageUrl,
         );
       }).toList();
-    } else {
-      throw Exception('Gagal memuat data menu');
+
+      await Future.delayed(const Duration(milliseconds: 500));
+      print('💾 [CHAINED] Data sudah diproses & disimpan (simulasi cache)');
+      print('🏁 [CHAINED] Selesai.');
+    } catch (e) {
+      print('❌ [CHAINED] Error: $e');
     }
   }
 }
