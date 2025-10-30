@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controller/menusection_controller.dart';
 import '../../../../models/menu_item.dart'; 
-import '../../menucard/controller/menucard_controller.dart';
-import '../../menucard/view/menucard_view.dart';
-import '../../menudetail/controller/menudetail_controller.dart';
-import '../../menudetail/view/menudetail_view.dart';
+import '../../mengatur_card_menu_di_landingpage/controller/menucard_controller.dart';
+import '../../mengatur_card_menu_di_landingpage/view/menucard_view.dart';
+import '../../mengatur_dialong_menu_saat_card_menu_diklik/controller/menudetail_controller.dart';
+import '../../mengatur_dialong_menu_saat_card_menu_diklik/view/menudetail_view.dart';
 
 class MenuSectionView extends GetView<MenuSectionController> {
   const MenuSectionView({super.key});

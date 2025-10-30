@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../widgets/app/drawerheader/view/drawerheader_view.dart';
-import '../widgets/app/drawermenu/view/drawermenu_view.dart';
-import '../widgets/app/location/view/location_view.dart';
-import '../widgets/app/whatsapp/controller/whatsapp_controller.dart';
+import '../widgets/app/mengatur_tampilan_header_drawer/view/drawerheader_view.dart';
+import '../widgets/app/mengatur_item_menu_dalam_drawer/view/drawermenu_view.dart';
+import '../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/view/location_view.dart';
+import '../widgets/app/mengatur_fungsi_buka_whatsapp/controller/whatsapp_controller.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
