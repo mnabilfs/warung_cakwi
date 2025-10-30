@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../controller/cartitem_controller.dart';
-import '../../../../models/menu_item.dart';
+import '../../../../data/models/menu_item.dart';
 
 class CartItemBindings extends Bindings {
   final MenuItem item;

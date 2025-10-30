@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../models/menu_item.dart';
+import '../../../../data/models/menu_item.dart';
 import '../../../../utils/price_formatter.dart';
 
 class CartItemView extends StatelessWidget {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../models/menu_item.dart';
+import '../../../../data/models/menu_item.dart';
 
 class MenuDetailController extends GetxController with GetSingleTickerProviderStateMixin {
   final MenuItem menuItem;

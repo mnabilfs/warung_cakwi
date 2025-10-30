@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controller/menudetail_controller.dart';
-import '../../../../models/menu_item.dart';  
+import '../../../../data/models/menu_item.dart';  
 import '../../../../utils/price_formatter.dart';
 
 class MenuDetailView extends GetView<MenuDetailController> {

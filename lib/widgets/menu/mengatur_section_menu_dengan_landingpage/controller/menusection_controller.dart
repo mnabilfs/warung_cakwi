@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../../../../models/menu_item.dart';
+import '../../../../data/models/menu_item.dart';
 
 class MenuSectionController extends GetxController {
   final String title;
