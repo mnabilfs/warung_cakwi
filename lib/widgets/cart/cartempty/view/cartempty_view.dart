@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class CartEmptyState extends StatelessWidget {
-  const CartEmptyState({super.key});
+class CartEmptyView extends StatelessWidget {
+  const CartEmptyView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,10 +13,17 @@ class CartEmptyState extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'Keranjang Kosong',
-            style: TextStyle(color: Colors.grey[400], fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 6),
-          Text('Tambahkan menu favorit Anda!', style: TextStyle(color: Colors.grey[600])),
+          Text(
+            'Tambahkan menu favorit Anda!',
+            style: TextStyle(color: Colors.grey[600]),
+          ),
         ],
       ),
     );

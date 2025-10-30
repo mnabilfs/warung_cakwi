@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class WhatsAppLauncher {
+class WhatsAppController extends GetxController {
   static const String phoneNumber = '6282337577433';
   static const String defaultMessage = 'Halo Bakso Ojolali Cakwi, saya ingin memesan...';
 
-  static Future<void> openWhatsApp(BuildContext context, {String? customMessage}) async {
+  Future<void> openWhatsApp(BuildContext context, {String? customMessage}) async {
     final String message = customMessage ?? defaultMessage;
     final String encodedMessage = Uri.encodeComponent(message);
 

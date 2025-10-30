@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../models/menu_item.dart';
-import '../../utils/price_formatter.dart';
+import '../../../../models/menu_item.dart';
+import '../../../../utils/price_formatter.dart';
 
-class CartItemCard extends StatelessWidget {
+class CartItemView extends StatelessWidget {
   final MenuItem item;
   final VoidCallback onRemove;
 
-  const CartItemCard({super.key, required this.item, required this.onRemove});
+  const CartItemView({
+    super.key,
+    required this.item,
+    required this.onRemove,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +24,21 @@ class CartItemCard extends StatelessWidget {
           backgroundColor: const Color(0xFF3D3D3D),
           child: Icon(item.icon, color: const Color(0xFFD4A017)),
         ),
-        title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
-        subtitle: Text('Rp ${PriceFormatter.format(item.price)}', style: const TextStyle(color: Color(0xFFD4A017), fontWeight: FontWeight.w600)),
+        title: Text(
+          item.name,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: Colors.white,
+          ),
+        ),
+        subtitle: Text(
+          'Rp ${PriceFormatter.format(item.price)}',
+          style: const TextStyle(
+            color: Color(0xFFD4A017),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         trailing: IconButton(
           icon: const Icon(Icons.delete, color: Colors.red),
           onPressed: onRemove,

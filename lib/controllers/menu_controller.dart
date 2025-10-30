@@ -39,6 +39,7 @@ class MenuController extends GetxController {
       backgroundColor: const Color(0xFF2D2D2D),
       colorText: const Color(0xFFD4A017),
       margin: const EdgeInsets.all(10),
+      animationDuration: const Duration(milliseconds: 400),
     );
   }
 
