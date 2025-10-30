@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/menu_item.dart';
-import '../widgets/cart/cartempty/view/cartempty_view.dart';
-import '../widgets/cart/cartitem/view/cartitem_view.dart';
-import '../widgets/cart/carttotal/view/carttotal_view.dart';
+import '../widgets/cart/mengatur_tampilan_saat_keranjang_kosong/view/cartempty_view.dart';
+import '../widgets/cart/mengatur_tampilan_item_dalam_keranjang/view/cartitem_view.dart';
+import '../widgets/cart/mengatur_bagian_bawah_halaman/view/carttotal_view.dart';
 import '../utils/price_formatter.dart';
 
 class CartPage extends StatefulWidget {

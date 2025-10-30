@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../widgets/banner/view/banner_view.dart';
 import 'app_drawer.dart';
-import '../widgets/cart/cartbutton/view/cartbutton_view.dart';
+import '../widgets/cart/mengatur_tombol_keranjang/view/cartbutton_view.dart';
 import '../controllers/menu_controller.dart' as my;
 import 'cart_page.dart';
 
