@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
-import '../../models/menu_item.dart';
-import 'menu_card.dart';
-import 'menu_detail_dialog.dart';
+import 'package:get/get.dart';
+import '../controller/menusection_controller.dart';
+import '../../../../models/menu_item.dart'; 
+import '../../menucard/controller/menucard_controller.dart';
+import '../../menucard/view/menucard_view.dart';
+import '../../menudetail/controller/menudetail_controller.dart';
+import '../../menudetail/view/menudetail_view.dart';
 
-class MenuSection extends StatelessWidget {
-  final String title;
-  final List<MenuItem> items;
-  final Function(MenuItem) onAddToCart;
-
-  const MenuSection({
-    super.key,
-    required this.title,
-    required this.items,
-    required this.onAddToCart,
-  });
+class MenuSectionView extends GetView<MenuSectionController> {
+  const MenuSectionView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +44,7 @@ class MenuSection extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Text(
-            title,
+            controller.title,
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -66,7 +61,7 @@ class MenuSection extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: items.length,
+      itemCount: controller.items.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: 12,
@@ -74,9 +69,13 @@ class MenuSection extends StatelessWidget {
         childAspectRatio: isWide ? 2.3 : 2.7,
       ),
       itemBuilder: (context, index) {
-        final menuItem = items[index];
-        return MenuCard(
-          item: menuItem,
+        final menuItem = controller.items[index];
+        
+        // Put MenuCardController untuk setiap item
+        Get.put(MenuCardController(item: menuItem), tag: menuItem.name);
+        
+        return MenuCardView(
+          key: ValueKey(menuItem.name),
           onTap: () => _showMenuDetail(context, menuItem),
         );
       },
@@ -84,14 +83,16 @@ class MenuSection extends StatelessWidget {
   }
 
   void _showMenuDetail(BuildContext context, MenuItem menuItem) {
+    // Put MenuDetailController
+    Get.put(MenuDetailController(menuItem: menuItem), tag: '${menuItem.name}_detail');
+    
     Navigator.push(
       context,
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 300),
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            MenuDetailDialog(
-          menuItem: menuItem,
-          onAddToCart: onAddToCart,
+        pageBuilder: (context, animation, secondaryAnimation) => MenuDetailView(
+          key: ValueKey('${menuItem.name}_detail'),
+          onAddToCart: controller.onAddToCart,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);

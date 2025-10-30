@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class DrawerHeaderWidget extends StatelessWidget {
-  const DrawerHeaderWidget({super.key});
+class DrawerHeaderView extends StatelessWidget {
+  const DrawerHeaderView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +19,18 @@ class DrawerHeaderWidget extends StatelessWidget {
         children: const [
           Icon(Icons.restaurant, size: 50, color: Color(0xFFD4A017)),
           SizedBox(height: 10),
-          Text('Bakso Ojolali Cakwi', style: TextStyle(color: Color(0xFFD4A017), fontSize: 22, fontWeight: FontWeight.bold)),
-          Text('Makanan Enak, Harga Terjangkau', style: TextStyle(color: Colors.white70, fontSize: 12)),
+          Text(
+            'Bakso Ojolali Cakwi',
+            style: TextStyle(
+              color: Color(0xFFD4A017),
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            'Makanan Enak, Harga Terjangkau',
+            style: TextStyle(color: Colors.white70, fontSize: 12),
+          ),
         ],
       ),
     );

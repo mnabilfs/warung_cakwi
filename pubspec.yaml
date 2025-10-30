@@ -1,5 +1,6 @@
 name: gerai_bakso
-description: "A new Flutter project."
+description: "Aplikasi menu Bakso Ojolali Cakwi dengan arsitektur MVC menggunakan GetX"
+
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -30,10 +31,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  url_launcher: ^6.1.14
+
+  # State Management & Dependency Injection
+  get: ^4.6.6
+
+  # HTTP Clients
   http: ^1.2.0
   dio: ^5.7.0
-  get: ^4.6.6
+
+  # URL Launcher untuk WhatsApp & Google Maps
+  url_launcher: ^6.1.14
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -60,6 +67,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  
+  # Assets untuk gambar produk
   assets:
     - assets/images/
 

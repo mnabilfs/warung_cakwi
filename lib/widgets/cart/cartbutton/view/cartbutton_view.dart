@@ -1,56 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../controller/cartbutton_controller.dart';
 
-/// CartButton dengan ANIMASI EKSPLISIT untuk badge
-class CartButton extends StatefulWidget {
+class CartButtonView extends StatefulWidget {
   final int itemCount;
   final VoidCallback onPressed;
 
-  const CartButton({super.key, required this.itemCount, required this.onPressed});
+  const CartButtonView({
+    super.key,
+    required this.itemCount,
+    required this.onPressed,
+  });
 
   @override
-  State<CartButton> createState() => _CartButtonState();
+  State<CartButtonView> createState() => _CartButtonViewState();
 }
 
-class _CartButtonState extends State<CartButton> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _rotationAnimation;
-
-  int _previousCount = 0;
+class _CartButtonViewState extends State<CartButtonView> {
+  late CartButtonController controller;
 
   @override
   void initState() {
     super.initState();
-    _previousCount = widget.itemCount;
-    
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-
-    _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.4), weight: 50),
-      TweenSequenceItem(tween: Tween(begin: 1.4, end: 1.0), weight: 50),
-    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
-
-    _rotationAnimation = Tween<double>(begin: 0.0, end: 0.2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    controller = Get.put(CartButtonController());
+    controller.previousCount = widget.itemCount;
   }
 
   @override
-  void didUpdateWidget(CartButton oldWidget) {
+  void didUpdateWidget(CartButtonView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.itemCount > _previousCount) {
-      _controller.forward(from: 0.0);
-    }
-    _previousCount = widget.itemCount;
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+    controller.updateItemCount(widget.itemCount);
   }
 
   @override
@@ -71,12 +50,12 @@ class _CartButtonState extends State<CartButton> with SingleTickerProviderStateM
               top: 8,
               child: IgnorePointer(
                 child: AnimatedBuilder(
-                  animation: _controller,
+                  animation: controller.animController,
                   builder: (context, child) {
                     return Transform.scale(
-                      scale: _scaleAnimation.value,
+                      scale: controller.scaleAnimation.value,
                       child: Transform.rotate(
-                        angle: _rotationAnimation.value,
+                        angle: controller.rotationAnimation.value,
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
@@ -86,7 +65,11 @@ class _CartButtonState extends State<CartButton> with SingleTickerProviderStateM
                           constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
                           child: Text(
                             '${widget.itemCount}',
-                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ),

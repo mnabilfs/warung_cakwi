@@ -1,63 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../models/menu_item.dart';
-import '../../utils/price_formatter.dart';
+import 'package:get/get.dart';
+import '../controller/menudetail_controller.dart';
+import '../../../../models/menu_item.dart';  
+import '../../../../utils/price_formatter.dart';
 
-class MenuDetailDialog extends StatefulWidget {
-  final MenuItem menuItem;
+class MenuDetailView extends GetView<MenuDetailController> {
   final Function(MenuItem) onAddToCart;
 
-  const MenuDetailDialog({
-    super.key,
-    required this.menuItem,
-    required this.onAddToCart,
-  });
-
-  @override
-  State<MenuDetailDialog> createState() => _MenuDetailDialogState();
-}
-
-class _MenuDetailDialogState extends State<MenuDetailDialog>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _iconRotateAnimation;
-
-  // 🔹 State untuk animasi implisit tombol
-  bool _isButtonPressed = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
-
-    _iconRotateAnimation = Tween<double>(
-      begin: 0.0,
-      end: 6.28,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  const MenuDetailView({super.key, required this.onAddToCart});
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +15,7 @@ class _MenuDetailDialogState extends State<MenuDetailDialog>
       backgroundColor: const Color(0xFF1A1A1A),
       appBar: AppBar(
         title: Text(
-          widget.menuItem.name,
+          controller.menuItem.name,
           style: const TextStyle(color: Color(0xFFD4A017)),
         ),
         backgroundColor: const Color(0xFF2D2D2D),
@@ -73,14 +23,14 @@ class _MenuDetailDialogState extends State<MenuDetailDialog>
       ),
       body: Center(
         child: AnimatedBuilder(
-          animation: _controller,
+          animation: controller.animController,
           builder: (context, child) {
             return Opacity(
-              opacity: _fadeAnimation.value,
+              opacity: controller.fadeAnimation.value,
               child: Transform.scale(
-                scale: _scaleAnimation.value,
+                scale: controller.scaleAnimation.value,
                 child: Hero(
-                  tag: widget.menuItem.name,
+                  tag: controller.menuItem.name,
                   child: Material(
                     color: Colors.transparent,
                     child: Container(
@@ -110,7 +60,7 @@ class _MenuDetailDialogState extends State<MenuDetailDialog>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Transform.rotate(
-                              angle: _iconRotateAnimation.value,
+                              angle: controller.iconRotateAnimation.value,
                               child: Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: const BoxDecoration(
@@ -118,7 +68,7 @@ class _MenuDetailDialogState extends State<MenuDetailDialog>
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
-                                  widget.menuItem.icon,
+                                  controller.menuItem.icon,
                                   size: 80,
                                   color: const Color(0xFFD4A017),
                                 ),
@@ -126,7 +76,7 @@ class _MenuDetailDialogState extends State<MenuDetailDialog>
                             ),
                             const SizedBox(height: 20),
                             Text(
-                              widget.menuItem.name,
+                              controller.menuItem.name,
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -136,7 +86,7 @@ class _MenuDetailDialogState extends State<MenuDetailDialog>
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              widget.menuItem.description,
+                              controller.menuItem.description,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Colors.white70,
@@ -151,7 +101,7 @@ class _MenuDetailDialogState extends State<MenuDetailDialog>
                             ),
                             const SizedBox(height: 20),
                             Text(
-                              'Harga: Rp ${PriceFormatter.format(widget.menuItem.price)}',
+                              'Harga: Rp ${PriceFormatter.format(controller.menuItem.price)}',
                               style: const TextStyle(
                                 fontSize: 20,
                                 color: Color(0xFFD4A017),
@@ -159,49 +109,43 @@ class _MenuDetailDialogState extends State<MenuDetailDialog>
                               ),
                             ),
                             const SizedBox(height: 25),
-
-                            // 🔸 Tombol dengan ANIMASI IMPLISIT
-                            AnimatedScale(
-                              duration: const Duration(milliseconds: 150),
-                              scale: _isButtonPressed ? 0.95 : 1.0,
-                              curve: Curves.easeInOut,
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFD4A017),
-                                  foregroundColor: Colors.black,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 30,
-                                    vertical: 15,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isButtonPressed = true;
-                                  });
-                                  Future.delayed(
-                                    const Duration(milliseconds: 150),
-                                    () {
-                                      setState(() {
-                                        _isButtonPressed = false;
-                                      });
-                                      widget.onAddToCart(widget.menuItem);
-                                      Navigator.pop(context);
+                            Obx(() => AnimatedScale(
+                                  duration: const Duration(milliseconds: 150),
+                                  scale: controller.isButtonPressed.value ? 0.95 : 1.0,
+                                  curve: Curves.easeInOut,
+                                  child: ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFD4A017),
+                                      foregroundColor: Colors.black,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 30,
+                                        vertical: 15,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      controller.pressButton();
+                                      Future.delayed(
+                                        const Duration(milliseconds: 150),
+                                        () {
+                                          controller.releaseButton();
+                                          onAddToCart(controller.menuItem);
+                                          Navigator.pop(context);
+                                        },
+                                      );
                                     },
-                                  );
-                                },
-                                icon: const Icon(Icons.add_shopping_cart),
-                                label: const Text(
-                                  'Tambah ke Keranjang',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                    icon: const Icon(Icons.add_shopping_cart),
+                                    label: const Text(
+                                      'Tambah ke Keranjang',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            ),
+                                )),
                           ],
                         ),
                       ),
