@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../controller/menudetail_controller.dart';
-import '../../../../models/menu_item.dart';
+import '../../../../data/models/menu_item.dart';
 
 class MenuDetailBindings extends Bindings {
   final MenuItem menuItem;

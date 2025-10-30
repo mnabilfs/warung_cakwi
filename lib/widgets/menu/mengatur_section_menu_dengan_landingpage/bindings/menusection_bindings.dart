@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../controller/menusection_controller.dart';
-import '../../../../models/menu_item.dart';
+import '../../../../data/models/menu_item.dart';
 
 class MenuSectionBindings extends Bindings {
   final String title;
