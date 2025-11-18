@@ -1,9 +1,10 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; 
 import '../models/menu_item.dart';
-import '../services/api_service.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+// Hapus import ApiService
 
 class MenuController extends GetxController {
   var menuItems = <MenuItem>[].obs;
@@ -11,29 +12,94 @@ class MenuController extends GetxController {
   var isLoading = false.obs;
   var errorMessage = ''.obs;
 
+  // Instance Supabase Client
+  final _supabase = Supabase.instance.client;
+  late Box<MenuItem> menuBox;
+  late Box<MenuItem> cartBox;
+
   @override
-  void onInit() {
+  void onInit() async {
+    menuBox = await Hive.openBox<MenuItem>('menu_cache');
+    cartBox = await Hive.openBox<MenuItem>('cart_cache');
+
+    // 2. MUAT DATA KERANJANG
+    _loadCartFromLocal(); // 🔴 Muat data Keranjang saat start
+
     super.onInit();
     fetchMenuItems();
   }
 
+  void _loadCartFromLocal() {
+    // Muat semua item dari Box Hive ke Observable List
+    cartItems.assignAll(cartBox.values.toList()); 
+  }
+
+  // --- FUNGSI LOKAL ---
+
+  // Fungsi untuk menyimpan data yang sukses dari Supabase ke Hive
+  Future<void> _saveMenuToLocal(List<MenuItem> items) async {
+    await menuBox.clear(); // Bersihkan data lama
+    await menuBox.addAll(items); // Tambahkan data baru
+  }
+
+  // Fungsi untuk memuat data dari Hive saat offline
+  List<MenuItem> _loadMenuFromLocal() {
+    return menuBox.values.toList();
+  }
+
+  // --- FUNGSI HYBRID FETCH ---
+
   Future<void> fetchMenuItems() async {
     try {
       isLoading.value = true;
-      errorMessage.value = '';
-      final data = await ApiService.fetchMenuItems();
+      // 1. CLOUD-FIRST: Coba ambil dari Supabase
+      final response = await _supabase.from('menu_items').select();
+
+      final List<MenuItem> data = (response as List<dynamic>)
+          .map((item) => MenuItem.fromJson(item))
+          .toList();
+
+      // 2. JIKA BERHASIL (ONLINE): SIMPAN KE HIVE & TAMPILKAN
+      await _saveMenuToLocal(data); // Simpan ke lokal
       menuItems.assignAll(data);
+      print("✅ Data diambil dari Supabase dan disimpan ke Hive.");
     } catch (e) {
-      errorMessage.value = e.toString();
+      // 3. JIKA GAGAL (Mencatat error Supabase & melakukan Fallback)
+      print("❌ ERROR SUPABASE TERCATAT: $e");
+
+      final localData = _loadMenuFromLocal();
+
+      if (localData.isNotEmpty) {
+        // Tampilkan data lokal
+        menuItems.assignAll(localData);
+        Get.snackbar(
+          "Mode Offline",
+          "Menampilkan menu tersimpan lokal.",
+          backgroundColor: Colors.amber,
+          colorText: Colors.black,
+        );
+      } else {
+        // Jika Hive juga kosong (pertama kali buka offline)
+        Get.snackbar(
+          "Error",
+          "Tidak ada koneksi internet dan cache lokal kosong.",
+        );
+      }
     } finally {
       isLoading.value = false;
     }
   }
 
+  @override
   void addToCart(MenuItem item) {
-    cartItems.add(item);
+    // Gunakan key unik (contoh: key terakhir + 1) untuk Insert ke Hive
+    final int nextKey = (cartBox.keys.isEmpty ? 0 : cartBox.keys.last as int) + 1;
+    cartBox.put(nextKey, item); 
     
-    // Snackbar simple & elegan
+    // Refresh List Observable dari Hive Box
+    _loadCartFromLocal();
+
+    // Snackbar code (tetap sama, tidak perlu diubah)
     Get.snackbar(
       '',
       '',
@@ -67,10 +133,7 @@ class MenuController extends GetxController {
                 const SizedBox(height: 2),
                 Text(
                   item.name,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -98,7 +161,16 @@ class MenuController extends GetxController {
 
   void removeFromCart(int index) {
     if (index >= 0 && index < cartItems.length) {
-      cartItems.removeAt(index);
+      // 🔴 PERUBAHAN UTAMA: Hapus dari Hive Box
+      
+      // 1. Dapatkan key Hive yang sesuai dengan index list yang ingin dihapus
+      final keyToDelete = cartBox.keys.elementAt(index); 
+      
+      // 2. Lakukan Operasi Delete ke Hive Box (Modifikasi data lokal)
+      cartBox.delete(keyToDelete); 
+      
+      // 3. Refresh List Observable dari Hive Box
+      _loadCartFromLocal();
     }
   }
 }

@@ -15,8 +15,6 @@ class LandingPage extends StatelessWidget {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CartPage(
-          cartItems: controller.cartItems,
-          onRemoveItem: (index) => controller.removeFromCart(index),
         ),
       ),
     );
