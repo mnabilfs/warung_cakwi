@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+// --- IMPORT CONTROLLERS ---
+import '../data/controllers/menu_controller.dart' as my; // Pakai alias 'my' sesuai kode Anda
+import '../data/controllers/auth_controller.dart';
+
+// --- IMPORT WIDGETS & PAGES ---
 import '../widgets/banner/view/banner_view.dart';
-import 'app_drawer.dart';
 import '../widgets/cart/mengatur_tombol_keranjang/view/cartbutton_view.dart';
-import '../data/controllers/menu_controller.dart' as my;
+import 'app_drawer.dart';
 import 'cart_page.dart';
 
 class LandingPage extends StatelessWidget {
   LandingPage({super.key});
 
+  // Inisialisasi Controller
   final my.MenuController controller = Get.put(my.MenuController());
+  final AuthController authC = Get.find<AuthController>(); // Ambil AuthController untuk Logout
 
   Future<void> _navigateToCart(BuildContext context) async {
     await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CartPage(
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => CartPage()),
     );
   }
 
@@ -33,23 +37,53 @@ class LandingPage extends StatelessWidget {
           ),
         ),
         backgroundColor: const Color(0xFF2D2D2D),
+        iconTheme: const IconThemeData(color: Color(0xFFD4A017)), // Warna Ikon Drawer
         actions: [
+          // 1. TOMBOL LOGOUT (Permintaan Anda sebelumnya)
+          IconButton(
+            icon: const Icon(Icons.logout, color: Color(0xFFD4A017)),
+            tooltip: "Keluar Aplikasi",
+            onPressed: () {
+              Get.defaultDialog(
+                title: "Logout",
+                titleStyle: const TextStyle(color: Color(0xFFD4A017), fontWeight: FontWeight.bold),
+                middleText: "Apakah Anda yakin ingin keluar?",
+                middleTextStyle: const TextStyle(color: Colors.white),
+                backgroundColor: const Color(0xFF2D2D2D),
+                textConfirm: "Ya, Keluar",
+                textCancel: "Batal",
+                confirmTextColor: Colors.black,
+                buttonColor: const Color(0xFFD4A017),
+                cancelTextColor: const Color(0xFFD4A017),
+                onConfirm: () {
+                  Get.back(); // Tutup dialog
+                  authC.logout(); // Jalankan fungsi logout
+                },
+              );
+            },
+          ),
+          
+          // 2. TOMBOL KERANJANG
           Obx(() => CartButtonView(
-                itemCount: controller.cartItems.length,
-                onPressed: () => _navigateToCart(context),
-              )),
+            itemCount: controller.cartItems.length,
+            onPressed: () => _navigateToCart(context),
+          )),
         ],
       ),
       drawer: const AppDrawer(),
+      
+      // --- BODY UTAMA ---
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator(color: Color(0xFFD4A017)));
         } else if (controller.errorMessage.isNotEmpty) {
           return Center(
-            child: Text('Gagal memuat data: ${controller.errorMessage}'),
+            child: Text('Gagal memuat data: ${controller.errorMessage}', 
+              style: const TextStyle(color: Colors.white)),
           );
         } else if (controller.menuItems.isEmpty) {
-          return const Center(child: Text('Tidak ada data.'));
+          return const Center(child: Text('Tidak ada data.', 
+              style: TextStyle(color: Colors.white)));
         }
 
         final items = controller.menuItems;
@@ -58,7 +92,6 @@ class LandingPage extends StatelessWidget {
           child: Column(
             children: [
               const BannerView(),
-              // ✅ GUNAKAN WIDGET BIASA TANPA GetView
               _buildMenuSection(items),
             ],
           ),
@@ -67,7 +100,8 @@ class LandingPage extends StatelessWidget {
     );
   }
 
-  // ✅ Buat method untuk build menu section
+  // --- BAGIAN UI MENU ---
+
   Widget _buildMenuSection(List items) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -79,7 +113,7 @@ class LandingPage extends StatelessWidget {
           children: [
             _buildSectionHeader(),
             _buildMenuGrid(context, items, crossAxisCount, isWide),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20), // Tambahan padding bawah
           ],
         );
       },
@@ -88,7 +122,7 @@ class LandingPage extends StatelessWidget {
 
   Widget _buildSectionHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       child: Row(
         children: [
           Container(
@@ -101,7 +135,7 @@ class LandingPage extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           const Text(
-            'Menu',
+            'Menu Pilihan',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -123,76 +157,128 @@ class LandingPage extends StatelessWidget {
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: isWide ? 2.3 : 2.7,
+        // Sesuaikan rasio agar kartu tidak gepeng
+        childAspectRatio: isWide ? 2.5 : 3.0, 
       ),
       itemBuilder: (context, index) {
         final menuItem = items[index];
-        
-        // ✅ LANGSUNG IMPORT DAN GUNAKAN
         return _buildMenuCard(context, menuItem);
       },
     );
   }
 
   Widget _buildMenuCard(BuildContext context, dynamic menuItem) {
-    // Import yang diperlukan ada di dalam method
     return GestureDetector(
       onTap: () => _showMenuDetail(context, menuItem),
-      child: Card(
-        margin: EdgeInsets.zero,
-        color: const Color(0xFF2D2D2D),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 30),
-          leading: Hero(
-            tag: menuItem.name,
-            child: CircleAvatar(
-              radius: 30,
-              backgroundColor: const Color(0xFF3D3D3D),
-              child: Icon(
-                menuItem.icon,
-                color: const Color(0xFFD4A017),
-                size: 30,
-              ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF2D2D2D),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-          ),
-          title: Text(
-            menuItem.name,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Colors.white,
-            ),
-          ),
-          subtitle: Text(
-            menuItem.description,
-            style: const TextStyle(fontSize: 13, color: Colors.white60),
-          ),
-          trailing: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                'Rp ${_formatPrice(menuItem.price)}',
-                style: const TextStyle(
-                  color: Color(0xFFD4A017),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+          ],
+        ),
+        child: Row(
+          children: [
+            // Bagian Kiri: Icon/Gambar
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Hero(
+                tag: menuItem.name, // Animasi Hero
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3D3D3D),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFD4A017).withOpacity(0.5)),
+                  ),
+                  child: Icon(
+                    menuItem.icon ?? Icons.fastfood, // Gunakan default icon jika null
+                    color: const Color(0xFFD4A017),
+                    size: 30,
+                  ),
                 ),
               ),
-              const SizedBox(height: 5),
-              const Icon(
-                Icons.add_shopping_cart,
-                color: Color(0xFFD4A017),
-                size: 20,
+            ),
+            
+            // Bagian Tengah: Teks
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    menuItem.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    menuItem.description,
+                    style: const TextStyle(fontSize: 12, color: Colors.white60),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+
+            // Bagian Kanan: Harga & Tombol Add
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'Rp ${_formatPrice(menuItem.price)}',
+                    style: const TextStyle(
+                      color: Color(0xFFD4A017),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD4A017).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.add_shopping_cart,
+                      color: Color(0xFFD4A017),
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
+  // --- FORMAT HARGA ---
+  String _formatPrice(int price) {
+    return price.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+  }
+
+  // --- POPUP DETAIL MENU ---
   void _showMenuDetail(BuildContext context, dynamic menuItem) {
     showDialog(
       context: context,
@@ -215,6 +301,7 @@ class LandingPage extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Icon Besar
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: const BoxDecoration(
@@ -222,12 +309,14 @@ class LandingPage extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    menuItem.icon,
+                    menuItem.icon ?? Icons.fastfood,
                     size: 80,
                     color: const Color(0xFFD4A017),
                   ),
                 ),
                 const SizedBox(height: 20),
+                
+                // Nama Makanan
                 Text(
                   menuItem.name,
                   style: const TextStyle(
@@ -238,6 +327,8 @@ class LandingPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 10),
+                
+                // Deskripsi
                 Text(
                   menuItem.description,
                   textAlign: TextAlign.center,
@@ -247,12 +338,16 @@ class LandingPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
+                
+                // Garis Pemisah
                 Container(
                   height: 1,
                   width: double.infinity,
                   color: const Color(0xFFD4A017).withOpacity(0.3),
                 ),
                 const SizedBox(height: 20),
+                
+                // Harga
                 Text(
                   'Harga: Rp ${_formatPrice(menuItem.price)}',
                   style: const TextStyle(
@@ -262,6 +357,8 @@ class LandingPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 25),
+                
+                // Tombol Tambah
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFD4A017),
@@ -276,7 +373,7 @@ class LandingPage extends StatelessWidget {
                   ),
                   onPressed: () {
                     controller.addToCart(menuItem);
-                    Navigator.pop(context);
+                    Navigator.pop(context); // Tutup dialog
                   },
                   icon: const Icon(Icons.add_shopping_cart),
                   label: const Text(
@@ -292,13 +389,6 @@ class LandingPage extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  String _formatPrice(int price) {
-    return price.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
     );
   }
 }
