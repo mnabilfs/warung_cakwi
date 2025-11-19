@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart' hide MenuController;
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; 
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/menu_item.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'auth_controller.dart';
@@ -9,11 +9,10 @@ class MenuController extends GetxController {
   var menuItems = <MenuItem>[].obs;
   var cartItems = <MenuItem>[].obs;
   var isLoading = false.obs;
-  var errorMessage = ''.obs;
 
-  // Map untuk menyimpan ID cart Cloud (agar bisa dihapus di Supabase)
-  // Key: Index di List UI, Value: ID Database Supabase
-  var cloudCartIds = <int, int>{}; 
+  var errorMessage = ''.obs;
+  // Map ID Cloud untuk penghapusan
+  var cloudCartIds = <int, int>{};
 
   final _supabase = Supabase.instance.client;
   late Box<MenuItem> menuBox;
@@ -22,59 +21,94 @@ class MenuController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
-    // Buka Database Lokal
+    // 1. Buka Database Lokal
     menuBox = await Hive.openBox<MenuItem>('menu_cache');
     cartBox = await Hive.openBox<MenuItem>('cart_cache');
 
+    // 2. Load Menu
     fetchMenuItems();
 
-    // Tunggu sebentar agar AuthController siap, lalu cek keranjang
+    // 3. Cek Login & Lakukan Sinkronisasi Cerdas
     Future.delayed(const Duration(milliseconds: 500), () {
-       _checkAuthAndLoadCart();
+       _smartSync();
     });
   }
 
-  void _checkAuthAndLoadCart() {
-    // Selalu load lokal dulu agar user langsung lihat keranjangnya (Anti-Kedip)
+  // --- LOGIKA SINKRONISASI CERDAS (SMART SYNC) ---
+  void _smartSync() async {
+    // Tampilkan data lokal dulu biar user tidak menunggu
     _loadCartFromLocal();
 
     if (Get.isRegistered<AuthController>()) {
       final authC = Get.find<AuthController>();
+      
       if (authC.isLoggedIn) {
-        // Jika Online/Login, baru coba update dari Cloud
-        _fetchCartFromCloud(); 
+        // STEP 1: SYNC UP (Lokal -> Cloud)
+        // Jika user punya data lokal (hasil offline) tapi cloud kosong/beda,
+        // kita coba upload data lokal ke cloud dulu.
+        if (cartBox.isNotEmpty) {
+          await _uploadLocalToCloud();
+        }
+
+        // STEP 2: SYNC DOWN (Cloud -> Lokal)
+        // Ambil data terbaru dari cloud untuk memastikan sinkronisasi total
+        await _fetchCartFromCloud();
+      } else {
+        // Jika Guest: Tampilkan Snackbar Offline saat awal buka
+        if (cartBox.isNotEmpty) {
+           _showOfflineSnackbar();
+        }
       }
     }
   }
 
-  void handleAuthChange() {
-    _checkAuthAndLoadCart();
+  // Fungsi Upload data Offline ke Online (Sync Up)
+  Future<void> _uploadLocalToCloud() async {
+    try {
+      final userId = _supabase.auth.currentUser!.id;
+      print("🔄 Mencoba upload data Offline ke Cloud...");
+
+      // Ambil semua item di lokal
+      final localItems = cartBox.values.toList();
+
+      // Kita hapus dulu data di Cloud (Strategy: Replace) agar tidak duplikat
+      // Atau jika ingin append, hapus baris delete di bawah ini.
+      // Tapi untuk cart sederhana, Replace biasanya lebih aman agar sinkron.
+      await _supabase.from('cart_items').delete().eq('user_id', userId);
+
+      // Upload ulang semua item lokal ke Cloud
+      for (var item in localItems) {
+        await _supabase.from('cart_items').insert({
+          'user_id': userId,
+          'menu_id': item.id,
+          'quantity': 1
+        });
+      }
+      print("✅ Sukses Upload Data Offline ke Cloud");
+    } catch (e) {
+      print("⚠️ Gagal Upload (Mungkin masih offline): $e");
+    }
   }
 
-  // --- FUNGSI LOKAL (HIVE - STABIL) ---
+  // --- FUNGSI LOAD & SAVE LOKAL ---
 
   void _loadCartFromLocal() {
     if (cartBox.isNotEmpty) {
-      // Konversi values Hive langsung ke List agar urutannya sama persis
       cartItems.assignAll(cartBox.values.toList());
-      print("📦 Load Cart dari HIVE (Lokal) - Jumlah: ${cartItems.length}");
     } else {
       cartItems.clear();
     }
   }
 
-  // Simpan cadangan Cloud ke Hive (Sync Down)
   Future<void> _syncCartToLocal(List<MenuItem> items) async {
-    await cartBox.clear(); 
-    // Gunakan .add() agar Hive mengatur urutan index secara otomatis
+    await cartBox.clear();
     for (var item in items) {
       await cartBox.add(item);
     }
-    print("💾 Cart berhasil dicadangkan ke Hive (Offline Ready)");
   }
 
-  // --- FUNGSI CLOUD (SUPABASE) ---
-  
+  // --- FUNGSI AMBIL DARI CLOUD (SYNC DOWN) ---
+
   Future<void> _fetchCartFromCloud() async {
     try {
       final userId = _supabase.auth.currentUser!.id;
@@ -92,24 +126,88 @@ class MenuController extends GetxController {
       for (int i = 0; i < data.length; i++) {
         final itemData = data[i];
         final menuData = itemData['menu_items'];
-        
         if (menuData != null) {
           loadedItems.add(MenuItem.fromJson(menuData));
-          // Simpan ID cart Cloud untuk penghapusan nanti
           cloudCartIds[i] = itemData['id']; 
         }
       }
       
-      // 1. Update Tampilan
+      // Update UI & Backup ke Hive
       cartItems.assignAll(loadedItems);
-
-      // 2. Update Cadangan Lokal
-      await _syncCartToLocal(loadedItems);
+      await _syncCartToLocal(loadedItems); 
 
     } catch (e) {
-      print("⚠️ Gagal koneksi Cloud: $e");
-      // Jangan lakukan apa-apa jika gagal, biarkan data lokal (Hive) yang tampil
-      // Ini mencegah data lokal hilang saat internet mati nyala
+      print("⚠️ Gagal ambil Cloud (Mode Offline aktif)");
+      _loadCartFromLocal(); // Fallback ke data lokal
+      _showOfflineSnackbar(); // Tampilkan Notif
+    }
+  }
+
+  // --- TAMBAH KE KERANJANG (MODIFIKASI OFFLINE) ---
+
+  @override
+  void addToCart(MenuItem item) async {
+    bool isUserLoggedIn = false;
+    if (Get.isRegistered<AuthController>()) {
+      isUserLoggedIn = Get.find<AuthController>().isLoggedIn;
+    }
+
+    // 1. Simpan Lokal Dulu (Wajib)
+    cartItems.add(item); // Update UI
+    await cartBox.add(item); // Simpan Hive
+
+    // 2. Coba Simpan Cloud
+    if (isUserLoggedIn) {
+      try {
+        await _supabase.from('cart_items').insert({
+          'user_id': _supabase.auth.currentUser!.id,
+          'menu_id': item.id, 
+          'quantity': 1
+        });
+        // Refresh ID mapping
+        _fetchCartFromCloud();
+        
+        // Notif Sukses Online
+        _showSuccessSnackbar(item.name, "Tersimpan di Cloud");
+
+      } catch (e) {
+        // 🔴 JIKA INTERNET MATI / GAGAL
+        print("⚠️ Gagal ke Cloud: $e");
+        _showOfflineSnackbar(); // Tampilkan Notif Offline yang diminta
+      }
+    } else {
+      // Jika Guest
+      _showOfflineSnackbar();
+    }
+  }
+
+  // --- HAPUS DARI KERANJANG ---
+
+  void removeFromCart(int index) async {
+     bool isUserLoggedIn = false;
+    if (Get.isRegistered<AuthController>()) {
+      isUserLoggedIn = Get.find<AuthController>().isLoggedIn;
+    }
+
+    if (index >= 0 && index < cartItems.length) {
+      cartItems.removeAt(index);
+      await cartBox.deleteAt(index);
+
+      if (isUserLoggedIn) {
+        try {
+          final cartIdToDelete = cloudCartIds[index];
+          if (cartIdToDelete != null) {
+            await _supabase.from('cart_items').delete().eq('id', cartIdToDelete);
+            _fetchCartFromCloud(); 
+          } else {
+            // Kalau ID null (item offline), sync ulang aja
+            await _uploadLocalToCloud();
+            await _fetchCartFromCloud();
+          }
+        } catch (e) {
+           _showOfflineSnackbar();
+        }
+      }
     }
   }
 
@@ -121,119 +219,51 @@ class MenuController extends GetxController {
       final List<MenuItem> data = (response as List<dynamic>)
           .map((item) => MenuItem.fromJson(item))
           .toList();
-
       await menuBox.clear();
       await menuBox.addAll(data);
       menuItems.assignAll(data);
     } catch (e) {
       final localData = menuBox.values.toList();
-      if (localData.isNotEmpty) {
-        menuItems.assignAll(localData);
-      }
+      if (localData.isNotEmpty) menuItems.assignAll(localData);
     } finally {
       isLoading.value = false;
     }
   }
-
-  // --- ADD TO CART (PERBAIKAN LOGIC) ---
-
-  @override
-  void addToCart(MenuItem item) async {
-    bool isUserLoggedIn = false;
-    if (Get.isRegistered<AuthController>()) {
-      isUserLoggedIn = Get.find<AuthController>().isLoggedIn;
-    }
-
-    // 1. Update Tampilan Langsung (Biar Cepat)
-    cartItems.add(item);
-    _showCustomSnackbar(item); 
-
-    // 2. Simpan ke Hive (Wajib, sebagai single source of truth saat offline)
-    // Kita gunakan .add() agar indexnya sinkron dengan List cartItems
-    await cartBox.add(item);
-
-    // 3. Jika Login, Coba Kirim ke Cloud
-    if (isUserLoggedIn) {
-      try {
-        await _supabase.from('cart_items').insert({
-          'user_id': _supabase.auth.currentUser!.id,
-          'menu_id': item.id, 
-          'quantity': 1
-        });
-        
-        // Refresh Cloud ID mapping tanpa mereset tampilan kasar
-        _fetchCartFromCloud(); 
-
-      } catch (e) {
-        print("⚠️ Offline: Item tersimpan di Hive, tapi gagal ke Cloud.");
-        // Tidak perlu fallback manual lagi karena di langkah 2 sudah kita simpan ke Hive
-      }
-    }
-  }
-
-  // --- REMOVE FROM CART (PERBAIKAN LOGIC) ---
-
-  void removeFromCart(int index) async {
-     bool isUserLoggedIn = false;
-    if (Get.isRegistered<AuthController>()) {
-      isUserLoggedIn = Get.find<AuthController>().isLoggedIn;
-    }
-
-    if (index >= 0 && index < cartItems.length) {
-      // 1. Hapus dari Tampilan
-      cartItems.removeAt(index);
-
-      // 2. Hapus dari Hive (Gunakan deleteAt agar sinkron dengan index List)
-      await cartBox.deleteAt(index);
-
-      // 3. Hapus dari Cloud (Jika Login)
-      if (isUserLoggedIn) {
-        try {
-          // Ambil ID Cloud berdasarkan index
-          // Kita gunakan index yang aman karena hive & list sudah sinkron
-          final cartIdToDelete = cloudCartIds[index];
-          
-          if (cartIdToDelete != null) {
-            await _supabase.from('cart_items').delete().eq('id', cartIdToDelete);
-            
-            // Refresh mapping, tapi jangan reset cartItems drastis
-            _fetchCartFromCloud(); 
-          }
-        } catch (e) {
-          print("Gagal hapus cloud: $e");
-          // Data lokal sudah terhapus, jadi secara UX user tidak terganggu
-        }
-      }
-    }
-  }
-
-  void _showCustomSnackbar(MenuItem item) {
+  
+  // --- SNACKBAR KHUSUS (YANG ANDA MINTA) ---
+  
+  void _showOfflineSnackbar() {
+    if (Get.isSnackbarOpen) return; // Cegah spam notif
+    
     Get.snackbar(
-      '', '',
-      titleText: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: const Color(0xFFD4A017).withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
-            child: const Icon(Icons.check_circle_outline, color: Color(0xFFD4A017), size: 22),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Ditambahkan ke Keranjang', style: TextStyle(color: Color(0xFFD4A017), fontWeight: FontWeight.bold, fontSize: 13)),
-            const SizedBox(height: 2),
-            Text(item.name, style: const TextStyle(color: Colors.white70, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
-          ])),
-        ],
-      ),
-      messageText: const SizedBox.shrink(),
-      snackPosition: SnackPosition.TOP,
-      backgroundColor: const Color(0xFF2D2D2D),
-      borderRadius: 12,
-      margin: const EdgeInsets.only(top: 10, left: 12, right: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      borderColor: const Color(0xFFD4A017).withOpacity(0.3),
-      borderWidth: 1,
-      duration: const Duration(milliseconds: 1500),
+      "Mode Offline",
+      "Data tersimpan di local storage",
+      icon: const Icon(Icons.wifi_off, color: Colors.white),
+      backgroundColor: Colors.redAccent.withOpacity(0.8),
+      colorText: Colors.white,
+      snackPosition: SnackPosition.TOP, // Muncul di Atas
+      duration: const Duration(seconds: 2),
+      margin: const EdgeInsets.all(10),
+      borderRadius: 10,
     );
+  }
+
+  void _showSuccessSnackbar(String itemName, String subtitle) {
+    Get.snackbar(
+      "Berhasil",
+      "$itemName - $subtitle",
+      icon: const Icon(Icons.cloud_done, color: Colors.white),
+      backgroundColor: Colors.green.withOpacity(0.8),
+      colorText: Colors.white,
+      snackPosition: SnackPosition.TOP,
+      duration: const Duration(seconds: 1),
+      margin: const EdgeInsets.all(10),
+      borderRadius: 10,
+    );
+  }
+  
+  // Panggil ini dari AuthController saat login/logout
+  void handleAuthChange() {
+    _smartSync();
   }
 }
