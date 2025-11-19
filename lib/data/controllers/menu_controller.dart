@@ -9,27 +9,31 @@ class MenuController extends GetxController {
   var menuItems = <MenuItem>[].obs;
   var cartItems = <MenuItem>[].obs;
   var isLoading = false.obs;
-  var errorMessage = ''.obs; // Variabel error
+  var errorMessage = ''.obs;
 
   // Map ID Cloud (Key: Index List, Value: ID Table Supabase)
   var cloudCartIds = <int, int>{}; 
 
   final _supabase = Supabase.instance.client;
+  
   late Box<MenuItem> menuBox;
   late Box<MenuItem> cartBox;
+  late Box settingsBox; // 🔴 BOX BARU UNTUK MENYIMPAN STATUS SYNC
 
   @override
   void onInit() async {
     super.onInit();
+    
     // 1. Buka Database Lokal
     menuBox = await Hive.openBox<MenuItem>('menu_cache');
     cartBox = await Hive.openBox<MenuItem>('cart_cache');
+    settingsBox = await Hive.openBox('settings_cache'); // 🔴 Init Box Settings
 
-    // 2. Load Awal (Biar layar tidak kosong)
+    // 2. Load Data Awal
     fetchMenuItems();
     _loadCartFromLocal();
 
-    // 3. Sinkronisasi Cerdas (Tunggu Auth siap)
+    // 3. Cek Login & Sinkronisasi
     Future.delayed(const Duration(milliseconds: 500), () {
        _checkAuthAndSync();
     });
@@ -39,67 +43,68 @@ class MenuController extends GetxController {
     _checkAuthAndSync();
   }
 
+  // --- LOGIKA SINKRONISASI UTAMA ---
   void _checkAuthAndSync() async {
     if (Get.isRegistered<AuthController>()) {
       final authC = Get.find<AuthController>();
+      
       if (authC.isLoggedIn) {
-        // --- LOGIKA SINKRONISASI ---
-        
-        // 1. SYNC UP (Offline -> Cloud)
-        // Upload data lokal ke cloud, TAPI cek dulu biar gak double
-        if (cartBox.isNotEmpty) {
-           await _uploadLocalToCloud();
-        }
+        // Cek: Apakah ada perubahan offline yang belum terkirim?
+        bool hasOfflineChanges = settingsBox.get('has_offline_changes', defaultValue: false);
 
-        // 2. SYNC DOWN (Cloud -> Offline)
-        // Paksa data lokal mengikuti Cloud agar HP A & B sama persis
-        await _fetchCartFromCloud(); 
+        if (hasOfflineChanges) {
+          // JIKA ADA EDITAN OFFLINE (Misal: Hapus item saat offline)
+          // Kita PAKSA Cloud mengikuti Lokal (Force Push)
+          print("🔄 Mendeteksi perubahan offline. Menimpa Cloud dengan data Lokal...");
+          await _forcePushLocalToCloud();
+        } else {
+          // JIKA TIDAK ADA EDITAN (Normal)
+          // Kita tarik data Cloud ke Lokal (Sync Down - Multi Device)
+          print("☁️ Tidak ada perubahan offline. Menarik data dari Cloud...");
+          await _fetchCartFromCloud();
+        }
       }
     }
   }
 
-  // --- FUNGSI UPLOAD CERDAS (ANTI DUPLIKAT) ---
-  Future<void> _uploadLocalToCloud() async {
+  // --- FUNGSI BARU: FORCE PUSH (LOKAL -> CLOUD) ---
+  // Fungsi ini menghapus isi Cloud dan menggantinya dengan isi Lokal
+  // Dipanggil HANYA jika ada perubahan offline
+  Future<void> _forcePushLocalToCloud() async {
     try {
       final userId = _supabase.auth.currentUser!.id;
       final localItems = cartBox.values.toList();
-      
+
+      // 1. Hapus SEMUA data di Cloud milik user ini
+      // Ini penting agar item yang dihapus saat offline ikut hilang di Cloud
+      await _supabase.from('cart_items').delete().eq('user_id', userId);
+
+      // 2. Upload ulang data Lokal ke Cloud
       if (localItems.isNotEmpty) {
-        print("🔄 Cek data offline sebelum upload...");
-
-        // Ambil daftar ID menu yang SUDAH ada di Cloud
-        final existingData = await _supabase
-            .from('cart_items')
-            .select('menu_id')
-            .eq('user_id', userId);
-        
-        // Masukkan ke dalam Set biar pengecekan cepat
-        final existingMenuIds = (existingData as List)
-            .map((e) => e['menu_id'] as int)
-            .toSet();
-
         for (var item in localItems) {
-           // KUNCI PERBAIKAN: Jika menu ini sudah ada di cloud, SKIP!
-           if (existingMenuIds.contains(item.id)) {
-             continue; 
-           }
-
-           // Jika belum ada, baru upload
            await _supabase.from('cart_items').insert({
             'user_id': userId,
             'menu_id': item.id, 
             'quantity': 1
           });
         }
-        // Setelah upload, kosongkan lokal. Nanti diisi ulang oleh _fetchCartFromCloud
-        await cartBox.clear(); 
       }
+
+      // 3. Matikan tanda "Offline Changes" karena sudah sinkron
+      await settingsBox.put('has_offline_changes', false);
+      
+      // 4. Tarik ulang untuk memastikan ID Cloud sinkron
+      await _fetchCartFromCloud();
+
+      print("✅ Sukses: Perubahan offline tersimpan ke Cloud.");
+
     } catch (e) {
-      print("⚠️ Gagal Upload Offline: $e");
+      print("⚠️ Gagal Push ke Cloud: $e");
+      // Tanda 'has_offline_changes' TETAP TRUE, jadi nanti dicoba lagi saat online
     }
   }
 
-  // --- FUNGSI DOWNLOAD & SAMAKAN DATA (SYNC DOWN) ---
+  // --- FUNGSI STANDARD FETCH (CLOUD -> LOKAL) ---
   Future<void> _fetchCartFromCloud() async {
     try {
       final userId = _supabase.auth.currentUser!.id;
@@ -117,23 +122,22 @@ class MenuController extends GetxController {
       for (int i = 0; i < data.length; i++) {
         final itemData = data[i];
         final menuData = itemData['menu_items'];
-        
         if (menuData != null) {
           loadedItems.add(MenuItem.fromJson(menuData));
           cloudCartIds[i] = itemData['id']; 
         }
       }
       
-      // 1. Update Tampilan (UI)
       cartItems.assignAll(loadedItems);
 
-      // 2. Update HIVE (Lokal)
-      // Hapus semua data lokal, ganti dengan data Cloud terbaru
-      // Ini yang bikin HP A dan HP B jadi SAMA PERSIS.
+      // Update Lokal agar sama dengan Cloud
       await cartBox.clear();
       for (var item in loadedItems) {
         await cartBox.add(item);
       }
+      
+      // Pastikan flag mati setelah fetch sukses
+      await settingsBox.put('has_offline_changes', false);
 
     } catch (e) {
       print("⚠️ Gagal ambil Cloud. Tetap pakai data lokal.");
@@ -164,18 +168,16 @@ class MenuController extends GetxController {
           'menu_id': item.id, 
           'quantity': 1
         });
-        // Tarik ulang biar sinkron
         await _fetchCartFromCloud(); 
         _showSuccessSnackbar(item.name, "Tersimpan di Cloud");
       } catch (e) {
-        // Offline: Simpan Lokal
-        print("⚠️ Offline Fallback");
+        // 🔴 OFFLINE: Simpan Lokal & TANDAI FLAG
         cartItems.add(item);
         await cartBox.add(item); 
+        await settingsBox.put('has_offline_changes', true); // Tandai ada perubahan
         _showOfflineSnackbar(); 
       }
     } else {
-      // Guest
       cartItems.add(item);
       await cartBox.add(item);
       _showOfflineSnackbar();
@@ -201,7 +203,9 @@ class MenuController extends GetxController {
           await _fetchCartFromCloud();
         }
       } catch (e) {
+        // 🔴 OFFLINE: Hapus Lokal & TANDAI FLAG
         if (index < cartBox.length) await cartBox.deleteAt(index);
+        await settingsBox.put('has_offline_changes', true); // Tandai ada perubahan
         _showOfflineSnackbar();
       }
     } else {
@@ -209,6 +213,7 @@ class MenuController extends GetxController {
     }
   }
 
+  // --- FETCH MENU ---
   Future<void> fetchMenuItems() async {
     try {
       isLoading.value = true;
@@ -216,7 +221,6 @@ class MenuController extends GetxController {
       final List<MenuItem> data = (response as List<dynamic>)
           .map((item) => MenuItem.fromJson(item))
           .toList();
-
       await menuBox.clear();
       await menuBox.addAll(data);
       menuItems.assignAll(data);
@@ -232,11 +236,12 @@ class MenuController extends GetxController {
     }
   }
 
+  // --- NOTIFIKASI ---
   void _showOfflineSnackbar() {
     if (Get.isSnackbarOpen) return;
     Get.snackbar(
       "Mode Offline",
-      "Disimpan di penyimpanan lokal (Hive)",
+      "Perubahan tersimpan di lokal & akan disinkronkan nanti.",
       icon: const Icon(Icons.wifi_off, color: Colors.white),
       backgroundColor: Colors.redAccent.withOpacity(0.9),
       colorText: Colors.white,
