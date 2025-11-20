@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart'; // Wajib untuk Get.find dan Obx
+import 'package:get/get.dart'; 
 import '../data/models/menu_item.dart';
 import '../widgets/cart/mengatur_tampilan_saat_keranjang_kosong/view/cartempty_view.dart';
 import '../widgets/cart/mengatur_tampilan_item_dalam_keranjang/view/cartitem_view.dart';
 import '../widgets/cart/mengatur_bagian_bawah_halaman/view/carttotal_view.dart';
 import '../utils/price_formatter.dart';
-import '../data/controllers/menu_controller.dart' as my; // Alias MenuController
+import '../data/controllers/menu_controller.dart' as my; 
 
 class CartPage extends StatefulWidget {
 
-  // Constructor kini kosong karena data diambil dari Controller
+  
   const CartPage({
     super.key,
   });
@@ -19,12 +19,12 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
-  // Ambil instance controller (Hanya sekali saat State dibuat)
+  
   final my.MenuController controller = Get.find<my.MenuController>();
   
-  // 🔴 GETTER: Mengambil list Observable dari controller
-  // Karena ini adalah getter, kita tidak memerlukan Obx di sini,
-  // tetapi Obx harus digunakan di dalam build()
+  
+  
+  
   List<MenuItem> get cartItems => controller.cartItems; 
 
   int get totalPrice => cartItems.fold(0, (sum, item) => sum + item.price);
@@ -41,9 +41,9 @@ class _CartPageState extends State<CartPage> {
         backgroundColor: const Color(0xFF2D2D2D),
         iconTheme: const IconThemeData(color: Color(0xFFD4A017)),
       ),
-      // 🔴 Gunakan Obx untuk mendengarkan perubahan pada cartItems
+      
       body: Obx(() {
-        // PENTING: Menggunakan cartItems dari getter lokal (yang terikat ke controller)
+        
         if (cartItems.isEmpty) {
           return const CartEmptyView();
         }
@@ -53,20 +53,20 @@ class _CartPageState extends State<CartPage> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: cartItems.length, // 🔴 Menggunakan cartItems lokal
+                itemCount: cartItems.length, 
                 itemBuilder: (context, index) {
                   final item = cartItems[index];
                   
                   return CartItemView(
                     item: item,
-                    onRemove: () => _removeItem(index), // Memanggil fungsi lokal
+                    onRemove: () => _removeItem(index), 
                   );
                 },
               ),
             ),
-            // Total View tetap di dalam Obx agar totalPrice diperbarui
+            
             CartTotalView(
-              itemCount: cartItems.length, // 🔴 Menggunakan cartItems lokal
+              itemCount: cartItems.length, 
               totalPrice: totalPrice,
               onCheckout: _showCheckoutDialog,
             ),
@@ -77,13 +77,13 @@ class _CartPageState extends State<CartPage> {
   }
 
   void _removeItem(int index) {
-    // 1. Dapatkan item sebelum dihapus untuk SnackBar
+    
     final item = cartItems[index];
     
-    // 2. 🔴 Panggil fungsi REMOVE dari Controller (yang sudah terintegrasi dengan Hive)
+    
     controller.removeFromCart(index);
     
-    // 3. Tampilkan SnackBar (Kode SnackBar tetap sama, hanya memanggil controller)
+    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -102,11 +102,11 @@ class _CartPageState extends State<CartPage> {
         ),
       ),
     );
-    // Tidak perlu setState({}) karena perubahan di controller memicu Obx
+    
   }
 
   void _showCheckoutDialog() {
-    // Logika Checkout tetap sama
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -135,7 +135,7 @@ class _CartPageState extends State<CartPage> {
             onPressed: () {
               Navigator.pop(context);
               _showSuccessMessage();
-              // ⚠️ TO DO: Di sini nanti ditambahkan logika Supabase INSERT ORDER
+              
             },
             child: const Text('Lanjutkan'),
           ),
@@ -145,7 +145,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   void _showSuccessMessage() {
-    // Logika SnackBar Sukses tetap sama
+    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text(

@@ -1,10 +1,10 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+
 
 part of 'menu_item.dart';
 
-// **************************************************************************
-// TypeAdapterGenerator
-// **************************************************************************
+
+
+
 
 class MenuItemAdapter extends TypeAdapter<MenuItem> {
   @override

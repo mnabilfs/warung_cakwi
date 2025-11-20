@@ -14,29 +14,29 @@ class AppDrawer extends StatelessWidget {
     final whatsappController = Get.put(WhatsAppController());
     final themeController = Get.find<ThemeController>();
 
-    // Gunakan Obx agar warna latar belakang drawer bereaksi terhadap perubahan tema secara langsung
+    
     return Obx(() => Drawer(
-      // Latar belakang berubah berdasarkan status tema
+      
       backgroundColor: themeController.isDarkMode.value ? const Color(0xFF2D2D2D) : Colors.white,
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // 1. HEADER
+          
           const DrawerHeaderView(),
           
-          // 2. MENU UTAMA (Beranda)
+          
           DrawerMenuView(
             icon: Icons.home,
             iconColor: const Color(0xFFD4A017),
             title: 'Beranda',
-            // Warna teks menyesuaikan mode tema
+            
             textColor: themeController.isDarkMode.value ? Colors.white : Colors.black87,
             onTap: () => Navigator.pop(context),
           ),
           
           const Divider(color: Colors.white24),
           
-          // 3. MENU INFORMASI
+          
           DrawerMenuView(
             icon: Icons.location_on,
             iconColor: Colors.red,
@@ -70,25 +70,25 @@ class AppDrawer extends StatelessWidget {
             onTap: () => Navigator.pop(context),
           ),
           
-          // ------------------------------------
+          
           const Divider(color: Colors.white54), 
-          // ------------------------------------
+          
 
-          // 4. FITUR TEMA (Menggunakan Shared Preferences)
-          // Menggunakan Obx di sini agar tombol bisa berubah ikon/judul secara real-time
+          
+          
           Obx(() => DrawerMenuView(
-            // Ikon dan warna berubah sesuai status tema
+            
             icon: themeController.isDarkMode.value ? Icons.wb_sunny : Icons.nights_stay,
             iconColor: themeController.isDarkMode.value ? Colors.yellow : Colors.indigo,
             title: themeController.isDarkMode.value ? 'Mode Terang' : 'Mode Gelap',
             subtitle: 'Simpan preferensi tema aplikasi',
             textColor: themeController.isDarkMode.value ? Colors.white : Colors.black87,
             onTap: () {
-              themeController.toggleTheme(); // Memanggil fungsi penyimpanan tema (Shared Preferences)
+              themeController.toggleTheme(); 
             },
           )),
           
-          // Hapus semua logika dan impor untuk Login/Logout
+          
         ],
       ),
     ));

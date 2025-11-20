@@ -15,12 +15,12 @@ class _LoginPageState extends State<LoginPage> {
   final passC = TextEditingController();
   final authC = Get.find<AuthController>();
   
-  // Status Mode: False = Login, True = Register
+  
   bool isRegisterMode = false; 
 
   @override
   Widget build(BuildContext context) {
-    // Warna Tema Emas
+    
     final goldColor = const Color(0xFFD4A017);
     final darkBg = const Color(0xFF1A1A1A);
     final cardBg = const Color(0xFF2D2D2D);
@@ -29,7 +29,7 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: darkBg,
       body: Stack(
         children: [
-          // 1. BACKGROUND DECORATION (Efek Cahaya Belakang)
+          
           Positioned(
             top: -100,
             right: -100,
@@ -69,14 +69,14 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          // 2. KONTEN UTAMA
+          
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // --- LOGO SECTION ---
+                  
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -99,7 +99,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 20),
                   
-                  // Judul Animasi
+                  
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
                     child: Text(
@@ -123,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 40),
 
-                  // --- FORM CARD ---
+                  
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -141,7 +141,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Text Judul Kecil
+                        
                         Text(
                           isRegisterMode ? "REGISTER" : "LOGIN",
                           style: TextStyle(
@@ -152,7 +152,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Input Email
+                        
                         _buildTextField(
                           controller: emailC,
                           label: "Email Address",
@@ -161,7 +161,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Input Password
+                        
                         _buildTextField(
                           controller: passC,
                           label: "Password",
@@ -171,7 +171,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(height: 30),
 
-                        // Tombol Utama (Gradient)
+                        
                         SizedBox(
                           width: double.infinity,
                           height: 55,
@@ -207,7 +207,7 @@ class _LoginPageState extends State<LoginPage> {
                                 }
                                 if (isRegisterMode) {
                                   authC.register(emailC.text, passC.text);
-                                  setState(() => isRegisterMode = false); // Balik ke login setelah daftar
+                                  setState(() => isRegisterMode = false); 
                                 } else {
                                   authC.login(emailC.text, passC.text);
                                 }
@@ -229,7 +229,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 30),
 
-                  // --- TOGGLE SWITCH ---
+                  
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -256,7 +256,7 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                   ),
 
-                  // Offline Mode Button
+                  
                   TextButton.icon(
                     onPressed: () => Get.offAllNamed('/home'),
                     icon: const Icon(Icons.offline_bolt, size: 16, color: Colors.grey),
@@ -274,7 +274,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Widget Helper untuk Text Field agar kodingan rapi
+  
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
