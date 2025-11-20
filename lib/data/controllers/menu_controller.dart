@@ -33,6 +33,9 @@ class MenuController extends GetxController {
     fetchMenuItems();
     _loadCartFromLocal();
 
+    // Debug Print Data Hive
+    _debugPrintHiveData();
+
     // 3. Cek Login & Sinkronisasi
     Future.delayed(const Duration(milliseconds: 500), () {
        _checkAuthAndSync();
@@ -182,6 +185,9 @@ class MenuController extends GetxController {
       await cartBox.add(item);
       _showOfflineSnackbar();
     }
+
+     // Debug Print data Hive
+     _debugPrintHiveData();
   }
 
   // --- REMOVE FROM CART ---
@@ -211,6 +217,52 @@ class MenuController extends GetxController {
     } else {
       if (index < cartBox.length) await cartBox.deleteAt(index);
     }
+    // Debug Print data Hive
+    _debugPrintHiveData();
+  }
+    
+    // Debug print
+    void _debugPrintHiveData() {
+    print('\n╔═══════════════════════════════════════════════╗');
+    print('║           HIVE DATABASE - CART DATA           ║');
+    print('╚═══════════════════════════════════════════════╝');
+    
+    // 1. INFO CART BOX
+    print('\n📂 CART BOX (cart_cache):');
+    print('   └─ Total Items: ${cartBox.length}');
+    print('   └─ Is Empty: ${cartBox.isEmpty}');
+    print('   └─ Is Open: ${cartBox.isOpen}');
+    
+    if (cartBox.isNotEmpty) {
+      print('\n   📋 Items di Keranjang:');
+      for (int i = 0; i < cartBox.length; i++) {
+        final item = cartBox.getAt(i);
+        print('   ├─ [$i] ${item?.name}');
+        print('   │   ├─ ID: ${item?.id}');
+        print('   │   ├─ Harga: Rp ${item?.price}');
+        print('   │   └─ Deskripsi: ${item?.description}');
+      }
+    } else {
+      print('   └─ ❌ Keranjang Kosong');
+    }
+    
+    // 2. INFO SETTINGS BOX
+    print('\n⚙️  SETTINGS BOX (settings_cache):');
+    print('   └─ Total Keys: ${settingsBox.length}');
+    
+    if (settingsBox.isNotEmpty) {
+      for (var key in settingsBox.keys) {
+        print('   ├─ Key: "$key" → Value: ${settingsBox.get(key)}');
+      }
+    } else {
+      print('   └─ ❌ Tidak ada settings tersimpan');
+    }
+    
+    // 3. INFO OBSERVABLE STATE
+    print('\n🔄 OBSERVABLE STATE (GetX):');
+    print('   └─ cartItems.length: ${cartItems.length}');
+    
+    print('\n╚═══════════════════════════════════════════════╝\n');
   }
 
   // --- FETCH MENU ---
