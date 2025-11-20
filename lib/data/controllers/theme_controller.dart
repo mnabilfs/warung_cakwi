@@ -24,8 +24,10 @@ class ThemeController extends GetxController {
     isDarkMode.value = savedTheme;
     // Set tema aplikasi secara global saat dimuat
     Get.changeThemeMode(savedTheme ? ThemeMode.dark : ThemeMode.light);
-  }
 
+        // Cetak Data SharedPreferences untuk debugging
+        _printSharedPrefs(prefs);
+  }
   // Mengubah status tema dan menyimpannya
   void toggleTheme() async {
     // Balik nilai saat ini
@@ -38,11 +40,33 @@ class ThemeController extends GetxController {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_themeKey, isDarkMode.value);
 
+    // Cetak data SharedPrefences untuk debugging
+    _printSharedPrefs(prefs);
+
     // Snackbar pemberitahuan
     Get.snackbar(
       'Tema Berhasil Diubah',
       isDarkMode.value ? 'Mode Gelap Aktif' : 'Mode Terang Aktif',
       snackPosition: SnackPosition.BOTTOM,
     );
+  }
+
+  // Fungsi untuk mencetak semua data di SharedPreferences
+   void _printSharedPrefs(SharedPreferences prefs) {
+    print('SHARED PREFERENCES - DATA TEMA');
+
+    Set<String> keys = prefs.getKeys();
+    
+    if (keys.isEmpty) {
+      print('❌ Tidak ada data tersimpan');
+    } else {
+      print('📁 Total Keys: ${keys.length}');
+      print('───────────────────────────────────────');
+      for (String key in keys) {
+        dynamic value = prefs.get(key);
+        print('🔑 $key = $value (${value.runtimeType})');
+      }
+    }
+    print('═══════════════════════════════════════\n');
   }
 }
