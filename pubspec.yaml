@@ -49,6 +49,11 @@ dependencies:
   flutter_dotenv: ^6.0.0
   hive_flutter: ^1.1.0
 
+  geolocator: ^13.0.0 # Atau versi terbaru
+  flutter_map: ^7.0.0 # Untuk menampilkan peta OpenStreetMap
+  latlong2: ^0.9.1    # Untuk koordinat
+  permission_handler: ^11.3.1 # Untuk izin lokasi
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
