@@ -346,14 +346,58 @@ class LocationService {
       }
 
       // Dapatkan posisi dengan akurasi sesuai setting
-      Position position = await Geolocator.getCurrentPosition(
-        locationSettings: LocationSettings(
-          accuracy: accuracy,
-          timeLimit: const Duration(
-            seconds: 15,
-          ), // Increase timeout untuk network provider
-        ),
+// Coba dapatkan last known position dulu sebagai fallback
+Position? lastKnown;
+try {
+  lastKnown = await Geolocator.getLastKnownPosition();
+  if (kDebugMode && lastKnown != null) {
+    print('✅ [LOCATION SERVICE] Got last known position as fallback');
+    print('📍 [LOCATION SERVICE] Fallback accuracy: ${lastKnown.accuracy}m');
+  }
+} catch (e) {
+  if (kDebugMode) {
+    print('⚠️ [LOCATION SERVICE] No last known position available');
+  }
+}
+
+// Timeout lebih panjang untuk Network Provider
+final timeoutDuration = useGps ? const Duration(seconds: 30) : const Duration(seconds: 30);
+
+if (kDebugMode) {
+  print('📍 [LOCATION SERVICE] Timeout set to: ${timeoutDuration.inSeconds} seconds');
+}
+
+Position position;
+try {
+  position = await Geolocator.getCurrentPosition(
+    locationSettings: LocationSettings(
+      accuracy: accuracy,
+      timeLimit: timeoutDuration,
+    ),
+  ).timeout(
+    timeoutDuration,
+    onTimeout: () {
+      if (kDebugMode) {
+        print('⏱️ [LOCATION SERVICE] Timeout reached!');
+      }
+      // Jika timeout dan ada last known position, gunakan itu
+      if (lastKnown != null) {
+        if (kDebugMode) {
+          print('✅ [LOCATION SERVICE] Using last known position due to timeout');
+        }
+        return lastKnown;
+      }
+      // Jika tidak ada fallback, throw error
+      throw TimeoutException(
+        'Location request timed out after ${timeoutDuration.inSeconds} seconds. '
+        'Please ensure your device has internet connection (for Network Location) '
+        'or clear sky view (for GPS).',
       );
+    },
+  );
+} on TimeoutException {
+  rethrow;
+}
 
       // Log informasi position yang diterima
       if (kDebugMode) {

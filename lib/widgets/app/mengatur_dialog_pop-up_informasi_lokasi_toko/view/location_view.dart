@@ -6,9 +6,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:intl/intl.dart';
 import '../controller/location_controller.dart';
+import '../../../../data/helpers/navigation_helper.dart';
 
-/// View untuk Live Location Tracker
-/// Menampilkan koordinat dan OpenStreetMap dengan marker lokasi pengguna
+/// View untuk Live Location Tracker dengan toggle GPS/Network dan navigasi ke Warung Cakwi
 class LocationView extends StatelessWidget {
   const LocationView({super.key});
 
@@ -19,7 +19,7 @@ class LocationView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Live Location Tracker',
+          'Live Tracker - Warung Cakwi',
           style: TextStyle(fontSize: 18),
         ),
         actions: [
@@ -36,7 +36,6 @@ class LocationView extends StatelessWidget {
         ],
       ),
       body: Obx(() {
-        // Loading state
         if (controller.isLoading) {
           return const Center(
             child: Column(
@@ -50,7 +49,6 @@ class LocationView extends StatelessWidget {
           );
         }
 
-        // Error state
         if (controller.errorMessage.isNotEmpty) {
           return Center(
             child: Padding(
@@ -77,19 +75,15 @@ class LocationView extends StatelessWidget {
           );
         }
 
-        // Main content
         return Stack(
           children: [
             Column(
               children: [
-                // Coordinate Display Section
-                _buildCoordinateDisplay(controller),
-
-                // OpenStreetMap Section
+                if (controller.currentPosition != null)
+                  _buildNavigationInfo(controller),
                 Expanded(child: _buildOpenStreetMap(controller)),
               ],
             ),
-            // Zoom controls - positioned di kanan layar
             Positioned(
               right: 16,
               bottom: 16,
@@ -151,60 +145,91 @@ class LocationView extends StatelessWidget {
     );
   }
 
-  /// Build coordinate display widget
-  Widget _buildCoordinateDisplay(LocationController controller) {
+  Widget _buildNavigationInfo(LocationController controller) {
+    final navInfo = NavigationHelper.getNavigationInfo(
+      controller.currentPosition!,
+    );
+
+    // Warna berubah sesuai GPS/Network mode
+    final primaryColor = controller.isGpsEnabled ? Colors.green : Colors.blue;
+    final secondaryColor = controller.isGpsEnabled
+        ? Colors.green.shade400
+        : Colors.blue.shade400;
+
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Get.theme.colorScheme.surface,
+        gradient: LinearGradient(
+          colors: [primaryColor.shade600, secondaryColor],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Row(
-              children: [
-                const Icon(Icons.location_on, color: Colors.red, size: 20),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    'Koordinat Lokasi',
-                    style: Get.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(width: 6),
-                // GPS Toggle Switch
-                Obx(() => Row(
+                child: const Icon(
+                  Icons.restaurant,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Warung Cakwi',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Arah: ${navInfo['direction']}',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // GPS/Network Toggle
+              Obx(
+                () => Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      controller.isGpsEnabled 
-                          ? Icons.gps_fixed 
-                          : Icons.gps_not_fixed,
+                      controller.isGpsEnabled
+                          ? Icons.gps_fixed
+                          : Icons.network_cell,
                       size: 16,
-                      color: controller.isGpsEnabled 
-                          ? Colors.green 
-                          : Colors.grey,
+                      color: Colors.white,
                     ),
                     const SizedBox(width: 3),
                     Text(
                       controller.isGpsEnabled ? 'GPS' : 'Net',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 10,
-                        color: controller.isGpsEnabled 
-                            ? Colors.green 
-                            : Colors.grey,
+                        color: Colors.white,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -217,172 +242,160 @@ class LocationView extends StatelessWidget {
                         child: Switch(
                           value: controller.isGpsEnabled,
                           onChanged: (value) => controller.toggleGps(),
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          activeColor: Colors.white,
+                          activeTrackColor: Colors.white.withValues(alpha: 0.3),
+                          inactiveThumbColor: Colors.white,
+                          inactiveTrackColor: Colors.white.withValues(
+                            alpha: 0.3,
+                          ),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
                     ),
                   ],
-                )),
-                if (controller.isTracking)
-                  Container(
-                    margin: const EdgeInsets.only(left: 4),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 5,
-                          height: 5,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
+                ),
+              ),
+              if (controller.isTracking)
+                Container(
+                  margin: const EdgeInsets.only(left: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: primaryColor,
+                          shape: BoxShape.circle,
                         ),
-                        const SizedBox(width: 3),
-                        const Text(
-                          'LIVE',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'LIVE',
+                        style: TextStyle(
+                          color: primaryColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (controller.currentPosition != null) ...[
-              _buildCoordinateRow(
-                'Latitude',
-                controller.latitude?.toStringAsFixed(6) ?? 'N/A',
-                Icons.north,
-              ),
-              const SizedBox(height: 8),
-              _buildCoordinateRow(
-                'Longitude',
-                controller.longitude?.toStringAsFixed(6) ?? 'N/A',
-                Icons.east,
-              ),
-              const SizedBox(height: 12),
-              const Divider(),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildInfoCard(
-                      'Akurasi',
-                      '${controller.accuracy?.toStringAsFixed(1) ?? 'N/A'} m',
-                      Icons.my_location,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildInfoCard(
-                      'Altitude',
-                      '${controller.altitude?.toStringAsFixed(1) ?? 'N/A'} m',
-                      Icons.height,
-                    ),
-                  ),
-                ],
-              ),
-              if (controller.speed != null && controller.speed! > 0) ...[
-                const SizedBox(height: 8),
-                _buildInfoCard(
-                  'Speed',
-                  '${controller.speed?.toStringAsFixed(1) ?? 'N/A'} m/s',
-                  Icons.speed,
-                ),
-              ],
-              if (controller.timestamp != null) ...[
-                const SizedBox(height: 8),
-                _buildInfoCard(
-                  'Waktu',
-                  DateFormat('HH:mm:ss').format(controller.timestamp!),
-                  Icons.access_time,
-                ),
-              ],
-            ] else ...[
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text(
-                    'Tidak ada data lokasi',
-                    style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ], // closes if/else spread
-          ], // closes children: [ from line 161
-        ), // Column
-      ), // SingleChildScrollView
-    ); // Container
-  }
+            ],
+          ),
+          const SizedBox(height: 16),
 
-  /// Build coordinate row
-  Widget _buildCoordinateRow(String label, String value, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: Get.theme.colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Text(
-                label,
-                style: Get.textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
+              Expanded(
+                child: _buildInfoCardWhite(
+                  icon: Icons.straighten,
+                  label: 'Jarak',
+                  value: navInfo['distanceFormatted'],
+                  color: primaryColor,
                 ),
               ),
-              const SizedBox(height: 2),
-              SelectableText(
-                value,
-                style: Get.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'monospace',
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildInfoCardWhite(
+                  icon: Icons.directions_walk,
+                  label: 'Jalan Kaki',
+                  value: navInfo['walkingTime'],
+                  color: primaryColor,
                 ),
               ),
             ],
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.copy, size: 20),
-          onPressed: () {
-            Clipboard.setData(ClipboardData(text: value));
-            Get.snackbar(
-              'Copied',
-              '$label: $value',
-              snackPosition: SnackPosition.BOTTOM,
-              duration: const Duration(seconds: 2),
-            );
-          },
-        ),
-      ],
+          const SizedBox(height: 8),
+          _buildInfoCardWhite(
+            icon: Icons.directions_car,
+            label: 'Kendaraan',
+            value: navInfo['drivingTime'],
+            color: primaryColor,
+          ),
+
+          const SizedBox(height: 12),
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            backgroundColor: Colors.transparent,
+            collapsedBackgroundColor: Colors.transparent,
+            iconColor: Colors.white,
+            collapsedIconColor: Colors.white,
+            title: const Text(
+              'Detail Koordinat',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    _buildCoordinateRow(
+                      'Lat',
+                      controller.latitude?.toStringAsFixed(6) ?? 'N/A',
+                      Icons.north,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildCoordinateRow(
+                      'Lng',
+                      controller.longitude?.toStringAsFixed(6) ?? 'N/A',
+                      Icons.east,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildCoordinateRow(
+                      'Akurasi',
+                      '${controller.accuracy?.toStringAsFixed(1) ?? 'N/A'} m',
+                      Icons.my_location,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  /// Build info card
-  Widget _buildInfoCard(String label, String value, IconData icon) {
+  Widget _buildInfoCardWhite({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Get.theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.3,
-        ),
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Get.theme.colorScheme.primary),
+          Icon(icon, size: 20),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -390,15 +403,15 @@ class LocationView extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: Get.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: Get.textTheme.bodyMedium?.copyWith(
+                  style: const TextStyle(
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
                 ),
               ],
@@ -409,7 +422,52 @@ class LocationView extends StatelessWidget {
     );
   }
 
-  /// Build OpenStreetMap widget menggunakan FlutterMap
+  Widget _buildCoordinateRow(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.white),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.copy, size: 16, color: Colors.white),
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: value));
+            Get.snackbar(
+              'Copied',
+              '$label: $value',
+              snackPosition: SnackPosition.BOTTOM,
+              duration: const Duration(seconds: 2),
+              backgroundColor: Colors.black87,
+              colorText: Colors.white,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   Widget _buildOpenStreetMap(LocationController controller) {
     if (controller.currentPosition == null) {
       return Center(
@@ -434,8 +492,16 @@ class LocationView extends StatelessWidget {
     }
 
     return Obx(() {
-      // Render map langsung, handle error dengan try-catch
       try {
+        final routeLine = NavigationHelper.generateRouteLine(
+          controller.currentPosition!,
+        );
+
+        // Warna marker berubah sesuai GPS/Network mode
+        final markerColor = controller.isGpsEnabled
+            ? Colors.green
+            : Colors.blue;
+
         return FlutterMap(
           mapController: controller.mapController,
           options: MapOptions(
@@ -451,7 +517,6 @@ class LocationView extends StatelessWidget {
                     controller.updateMapCenter(camera.center, camera.zoom);
                   }
                 } catch (e) {
-                  // Ignore error if controller is disposed
                   if (kDebugMode) {
                     print('Error updating map center: $e');
                   }
@@ -460,16 +525,25 @@ class LocationView extends StatelessWidget {
             },
           ),
           children: [
-            // Tile Layer - OpenStreetMap tiles
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.mobile.modul5',
               maxZoom: 19,
-              // Retina mode untuk kualitas lebih baik
               retinaMode: MediaQuery.of(Get.context!).devicePixelRatio > 1.0,
             ),
 
-            // Marker Layer - Menampilkan marker lokasi pengguna
+            PolylineLayer(
+              polylines: [
+                Polyline(
+                  points: routeLine,
+                  strokeWidth: 4,
+                  color: markerColor.shade600,
+                  borderColor: Colors.white,
+                  borderStrokeWidth: 2,
+                ),
+              ],
+            ),
+
             if (controller.currentPosition != null)
               MarkerLayer(
                 markers: [
@@ -480,7 +554,7 @@ class LocationView extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.red,
+                        color: markerColor,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 3),
                         boxShadow: [
@@ -492,7 +566,34 @@ class LocationView extends StatelessWidget {
                         ],
                       ),
                       child: const Icon(
-                        Icons.location_on,
+                        Icons.person,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+
+                  Marker(
+                    point: NavigationHelper.warungLocation,
+                    width: 50,
+                    height: 50,
+                    alignment: Alignment.center,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(
+                        Icons.restaurant,
                         color: Colors.white,
                         size: 20,
                       ),
@@ -501,19 +602,16 @@ class LocationView extends StatelessWidget {
                 ],
               ),
 
-            // Attribution
-            RichAttributionWidget(
-              alignment: AttributionAlignment.bottomLeft,
-              popupBackgroundColor: Colors.white,
-              attributions: [
-                TextSourceAttribution('OpenStreetMap', onTap: () => {}),
-                TextSourceAttribution('Contributors', onTap: () => {}),
-              ],
+            SimpleAttributionWidget(
+              source: Text(
+                '© OpenStreetMap contributors',
+                style: TextStyle(fontSize: 10, color: Colors.black54),
+              ),
+              alignment: Alignment.bottomLeft,
             ),
           ],
         );
       } catch (e) {
-        // Jika error, tampilkan error message dan tombol retry
         if (kDebugMode) {
           print('Error rendering map: $e');
         }
@@ -527,7 +625,6 @@ class LocationView extends StatelessWidget {
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () {
-                  // Reset map controller dan refresh
                   controller.resetMapController();
                   controller.refreshPosition();
                 },
