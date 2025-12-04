@@ -126,7 +126,16 @@ class NetworkLocationController extends GetxController {
       if (kDebugMode) {
         print('🌐 [NETWORK CONTROLLER] Fetching fresh position (no cache)...');
       }
-      await getCurrentPosition();
+// Coba dapatkan last known position dulu untuk tampilan awal
+await getLastKnownPosition();
+
+// Kemudian refresh dengan posisi terbaru (jangan await, biar tidak blocking)
+getCurrentPosition().catchError((e) {
+  if (kDebugMode) {
+    print('⚠️ Failed to get current position on init: $e');
+  }
+  // Error sudah di-handle di getCurrentPosition()
+});
 
       _isLoading.value = false;
     } catch (e, stackTrace) {
