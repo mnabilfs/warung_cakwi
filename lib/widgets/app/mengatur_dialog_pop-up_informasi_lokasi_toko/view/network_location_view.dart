@@ -1,24 +1,26 @@
+// lib\widgets\app\mengatur_dialog_pop-up_informasi_lokasi_toko\view\network_location_view.dart
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../controller/location_controller.dart';
+import '../controller/network_location_controller.dart';
 import '../../../../data/helpers/navigation_helper.dart';
 
-/// View untuk Live Location Tracker dengan toggle GPS/Network dan navigasi ke Warung Cakwi
-class LocationView extends StatelessWidget {
-  const LocationView({super.key});
+/// View untuk Network Provider Location Tracker dengan navigasi ke Warung Cakwi
+class NetworkLocationView extends StatelessWidget {
+  const NetworkLocationView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<LocationController>();
+    final controller = Get.find<NetworkLocationController>();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Live Tracker - Warung Cakwi',
+          'Network Location - Warung Cakwi',
           style: TextStyle(fontSize: 18),
         ),
         actions: [
@@ -49,6 +51,7 @@ class LocationView extends StatelessWidget {
         }
 
         if (controller.errorMessage.isNotEmpty) {
+          final errorAction = controller.getErrorAction();
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -64,9 +67,9 @@ class LocationView extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
-                    onPressed: controller.requestPermission,
-                    icon: const Icon(Icons.location_on),
-                    label: const Text('Request Permission'),
+                    onPressed: errorAction['action'] as VoidCallback?,
+                    icon: Icon(errorAction['icon'] as IconData),
+                    label: Text(errorAction['label'] as String),
                   ),
                 ],
               ),
@@ -90,7 +93,7 @@ class LocationView extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   FloatingActionButton(
-                    heroTag: 'zoom_in',
+                    heroTag: 'network_zoom_in',
                     mini: true,
                     onPressed: () {
                       try {
@@ -105,7 +108,7 @@ class LocationView extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   FloatingActionButton(
-                    heroTag: 'zoom_out',
+                    heroTag: 'network_zoom_out',
                     mini: true,
                     onPressed: () {
                       try {
@@ -120,7 +123,7 @@ class LocationView extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   FloatingActionButton(
-                    heroTag: 'center',
+                    heroTag: 'network_center',
                     mini: true,
                     onPressed: () {
                       try {
@@ -139,27 +142,17 @@ class LocationView extends StatelessWidget {
           ],
         );
       }),
-      floatingActionButton: null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
-  Widget _buildNavigationInfo(LocationController controller) {
-    final navInfo = NavigationHelper.getNavigationInfo(
-      controller.currentPosition!,
-    );
-
-    // Warna berubah sesuai GPS/Network mode
-    final primaryColor = controller.isGpsEnabled ? Colors.green : Colors.blue;
-    final secondaryColor = controller.isGpsEnabled
-        ? Colors.green.shade400
-        : Colors.blue.shade400;
-
+  Widget _buildNavigationInfo(NetworkLocationController controller) {
+    final navInfo = NavigationHelper.getNavigationInfo(controller.currentPosition!);
+    
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [primaryColor.shade600, secondaryColor],
+          colors: [Colors.blue.shade600, Colors.blue.shade400],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -211,53 +204,8 @@ class LocationView extends StatelessWidget {
                   ],
                 ),
               ),
-              // GPS/Network Toggle
-              Obx(
-                () => Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      controller.isGpsEnabled
-                          ? Icons.gps_fixed
-                          : Icons.network_cell,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      controller.isGpsEnabled ? 'GPS' : 'Net',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    SizedBox(
-                      width: 40,
-                      height: 24,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Switch(
-                          value: controller.isGpsEnabled,
-                          onChanged: (value) => controller.toggleGps(),
-                          activeColor: Colors.white,
-                          activeTrackColor: Colors.white.withValues(alpha: 0.3),
-                          inactiveThumbColor: Colors.white,
-                          inactiveTrackColor: Colors.white.withValues(
-                            alpha: 0.3,
-                          ),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               if (controller.isTracking)
                 Container(
-                  margin: const EdgeInsets.only(left: 4),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
                     vertical: 4,
@@ -272,16 +220,16 @@ class LocationView extends StatelessWidget {
                       Container(
                         width: 6,
                         height: 6,
-                        decoration: BoxDecoration(
-                          color: primaryColor,
+                        decoration: const BoxDecoration(
+                          color: Colors.blue,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Text(
+                      const Text(
                         'LIVE',
                         style: TextStyle(
-                          color: primaryColor,
+                          color: Colors.blue,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
@@ -292,7 +240,7 @@ class LocationView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-
+          
           Row(
             children: [
               Expanded(
@@ -300,7 +248,6 @@ class LocationView extends StatelessWidget {
                   icon: Icons.straighten,
                   label: 'Jarak',
                   value: navInfo['distanceFormatted'],
-                  color: primaryColor,
                 ),
               ),
               const SizedBox(width: 12),
@@ -309,7 +256,6 @@ class LocationView extends StatelessWidget {
                   icon: Icons.directions_walk,
                   label: 'Jalan Kaki',
                   value: navInfo['walkingTime'],
-                  color: primaryColor,
                 ),
               ),
             ],
@@ -319,9 +265,8 @@ class LocationView extends StatelessWidget {
             icon: Icons.directions_car,
             label: 'Kendaraan',
             value: navInfo['drivingTime'],
-            color: primaryColor,
           ),
-
+          
           const SizedBox(height: 12),
           ExpansionTile(
             tilePadding: EdgeInsets.zero,
@@ -377,7 +322,6 @@ class LocationView extends StatelessWidget {
     required IconData icon,
     required String label,
     required String value,
-    required Color color,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -394,7 +338,7 @@ class LocationView extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20),
+          Icon(icon, size: 20, color: Colors.blue.shade700),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -402,7 +346,10 @@ class LocationView extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -467,7 +414,7 @@ class LocationView extends StatelessWidget {
     );
   }
 
-  Widget _buildOpenStreetMap(LocationController controller) {
+  Widget _buildOpenStreetMap(NetworkLocationController controller) {
     if (controller.currentPosition == null) {
       return Center(
         child: Column(
@@ -495,11 +442,6 @@ class LocationView extends StatelessWidget {
         final routeLine = NavigationHelper.generateRouteLine(
           controller.currentPosition!,
         );
-
-        // Warna marker berubah sesuai GPS/Network mode
-        final markerColor = controller.isGpsEnabled
-            ? Colors.green
-            : Colors.blue;
 
         return FlutterMap(
           mapController: controller.mapController,
@@ -530,19 +472,19 @@ class LocationView extends StatelessWidget {
               maxZoom: 19,
               retinaMode: MediaQuery.of(Get.context!).devicePixelRatio > 1.0,
             ),
-
+            
             PolylineLayer(
               polylines: [
                 Polyline(
                   points: routeLine,
                   strokeWidth: 4,
-                  color: markerColor.shade600,
+                  color: Colors.blue.shade600,
                   borderColor: Colors.white,
                   borderStrokeWidth: 2,
                 ),
               ],
             ),
-
+            
             if (controller.currentPosition != null)
               MarkerLayer(
                 markers: [
@@ -553,7 +495,7 @@ class LocationView extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: markerColor,
+                        color: Colors.blue,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 3),
                         boxShadow: [
@@ -571,7 +513,7 @@ class LocationView extends StatelessWidget {
                       ),
                     ),
                   ),
-
+                  
                   Marker(
                     point: NavigationHelper.warungLocation,
                     width: 50,
@@ -600,13 +542,14 @@ class LocationView extends StatelessWidget {
                   ),
                 ],
               ),
-
-            SimpleAttributionWidget(
-              source: Text(
-                '© OpenStreetMap contributors',
-                style: TextStyle(fontSize: 10, color: Colors.black54),
-              ),
-              alignment: Alignment.bottomLeft,
+            
+            RichAttributionWidget(
+              alignment: AttributionAlignment.bottomLeft,
+              popupBackgroundColor: Colors.white,
+              attributions: [
+                TextSourceAttribution('OpenStreetMap', onTap: () => {}),
+                TextSourceAttribution('Contributors', onTap: () => {}),
+              ],
             ),
           ],
         );

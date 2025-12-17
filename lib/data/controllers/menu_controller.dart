@@ -11,32 +11,32 @@ class MenuController extends GetxController {
   var isLoading = false.obs;
   var errorMessage = ''.obs;
 
-  // Map ID Cloud (Key: Index List, Value: ID Table Supabase)
+  
   var cloudCartIds = <int, int>{}; 
 
   final _supabase = Supabase.instance.client;
   
   late Box<MenuItem> menuBox;
   late Box<MenuItem> cartBox;
-  late Box settingsBox; // 🔴 BOX BARU UNTUK MENYIMPAN STATUS SYNC
+  late Box settingsBox; 
 
   @override
   void onInit() async {
     super.onInit();
     
-    // 1. Buka Database Lokal
+    
     menuBox = await Hive.openBox<MenuItem>('menu_cache');
     cartBox = await Hive.openBox<MenuItem>('cart_cache');
-    settingsBox = await Hive.openBox('settings_cache'); // 🔴 Init Box Settings
+    settingsBox = await Hive.openBox('settings_cache'); 
 
-    // 2. Load Data Awal
+    
     fetchMenuItems();
     _loadCartFromLocal();
 
-    // Debug Print Data Hive
+    
     _debugPrintHiveData();
 
-    // 3. Cek Login & Sinkronisasi
+    
     Future.delayed(const Duration(milliseconds: 500), () {
        _checkAuthAndSync();
     });
@@ -46,23 +46,23 @@ class MenuController extends GetxController {
     _checkAuthAndSync();
   }
 
-  // --- LOGIKA SINKRONISASI UTAMA ---
+  
   void _checkAuthAndSync() async {
     if (Get.isRegistered<AuthController>()) {
       final authC = Get.find<AuthController>();
       
       if (authC.isLoggedIn) {
-        // Cek: Apakah ada perubahan offline yang belum terkirim?
+        
         bool hasOfflineChanges = settingsBox.get('has_offline_changes', defaultValue: false);
 
         if (hasOfflineChanges) {
-          // JIKA ADA EDITAN OFFLINE (Misal: Hapus item saat offline)
-          // Kita PAKSA Cloud mengikuti Lokal (Force Push)
+          
+          
           print("🔄 Mendeteksi perubahan offline. Menimpa Cloud dengan data Lokal...");
           await _forcePushLocalToCloud();
         } else {
-          // JIKA TIDAK ADA EDITAN (Normal)
-          // Kita tarik data Cloud ke Lokal (Sync Down - Multi Device)
+          
+          
           print("☁️ Tidak ada perubahan offline. Menarik data dari Cloud...");
           await _fetchCartFromCloud();
         }
@@ -70,19 +70,19 @@ class MenuController extends GetxController {
     }
   }
 
-  // --- FUNGSI BARU: FORCE PUSH (LOKAL -> CLOUD) ---
-  // Fungsi ini menghapus isi Cloud dan menggantinya dengan isi Lokal
-  // Dipanggil HANYA jika ada perubahan offline
+  
+  
+  
   Future<void> _forcePushLocalToCloud() async {
     try {
       final userId = _supabase.auth.currentUser!.id;
       final localItems = cartBox.values.toList();
 
-      // 1. Hapus SEMUA data di Cloud milik user ini
-      // Ini penting agar item yang dihapus saat offline ikut hilang di Cloud
+      
+      
       await _supabase.from('cart_items').delete().eq('user_id', userId);
 
-      // 2. Upload ulang data Lokal ke Cloud
+      
       if (localItems.isNotEmpty) {
         for (var item in localItems) {
            await _supabase.from('cart_items').insert({
@@ -93,21 +93,21 @@ class MenuController extends GetxController {
         }
       }
 
-      // 3. Matikan tanda "Offline Changes" karena sudah sinkron
+      
       await settingsBox.put('has_offline_changes', false);
       
-      // 4. Tarik ulang untuk memastikan ID Cloud sinkron
+      
       await _fetchCartFromCloud();
 
       print("✅ Sukses: Perubahan offline tersimpan ke Cloud.");
 
     } catch (e) {
       print("⚠️ Gagal Push ke Cloud: $e");
-      // Tanda 'has_offline_changes' TETAP TRUE, jadi nanti dicoba lagi saat online
+      
     }
   }
 
-  // --- FUNGSI STANDARD FETCH (CLOUD -> LOKAL) ---
+  
   Future<void> _fetchCartFromCloud() async {
     try {
       final userId = _supabase.auth.currentUser!.id;
@@ -133,13 +133,13 @@ class MenuController extends GetxController {
       
       cartItems.assignAll(loadedItems);
 
-      // Update Lokal agar sama dengan Cloud
+      
       await cartBox.clear();
       for (var item in loadedItems) {
         await cartBox.add(item);
       }
       
-      // Pastikan flag mati setelah fetch sukses
+      
       await settingsBox.put('has_offline_changes', false);
 
     } catch (e) {
@@ -155,8 +155,7 @@ class MenuController extends GetxController {
     }
   }
 
-  // --- ADD TO CART ---
-  @override
+  
   void addToCart(MenuItem item) async {
     bool isUserLoggedIn = false;
     if (Get.isRegistered<AuthController>()) {
@@ -165,7 +164,7 @@ class MenuController extends GetxController {
 
     if (isUserLoggedIn) {
       try {
-        // Online: Kirim ke Cloud
+        
         await _supabase.from('cart_items').insert({
           'user_id': _supabase.auth.currentUser!.id,
           'menu_id': item.id, 
@@ -174,10 +173,10 @@ class MenuController extends GetxController {
         await _fetchCartFromCloud(); 
         _showSuccessSnackbar(item.name, "Tersimpan di Cloud");
       } catch (e) {
-        // 🔴 OFFLINE: Simpan Lokal & TANDAI FLAG
+        
         cartItems.add(item);
         await cartBox.add(item); 
-        await settingsBox.put('has_offline_changes', true); // Tandai ada perubahan
+        await settingsBox.put('has_offline_changes', true); 
         _showOfflineSnackbar(); 
       }
     } else {
@@ -186,11 +185,11 @@ class MenuController extends GetxController {
       _showOfflineSnackbar();
     }
 
-     // Debug Print data Hive
+     
      _debugPrintHiveData();
   }
 
-  // --- REMOVE FROM CART ---
+  
   void removeFromCart(int index) async {
      bool isUserLoggedIn = false;
     if (Get.isRegistered<AuthController>()) {
@@ -209,25 +208,25 @@ class MenuController extends GetxController {
           await _fetchCartFromCloud();
         }
       } catch (e) {
-        // 🔴 OFFLINE: Hapus Lokal & TANDAI FLAG
+        
         if (index < cartBox.length) await cartBox.deleteAt(index);
-        await settingsBox.put('has_offline_changes', true); // Tandai ada perubahan
+        await settingsBox.put('has_offline_changes', true); 
         _showOfflineSnackbar();
       }
     } else {
       if (index < cartBox.length) await cartBox.deleteAt(index);
     }
-    // Debug Print data Hive
+    
     _debugPrintHiveData();
   }
     
-    // Debug print
+    
     void _debugPrintHiveData() {
     print('\n╔═══════════════════════════════════════════════╗');
     print('║           HIVE DATABASE - CART DATA           ║');
     print('╚═══════════════════════════════════════════════╝');
     
-    // 1. INFO CART BOX
+    
     print('\n📂 CART BOX (cart_cache):');
     print('   └─ Total Items: ${cartBox.length}');
     print('   └─ Is Empty: ${cartBox.isEmpty}');
@@ -246,7 +245,7 @@ class MenuController extends GetxController {
       print('   └─ ❌ Keranjang Kosong');
     }
     
-    // 2. INFO SETTINGS BOX
+    
     print('\n⚙️  SETTINGS BOX (settings_cache):');
     print('   └─ Total Keys: ${settingsBox.length}');
     
@@ -258,14 +257,14 @@ class MenuController extends GetxController {
       print('   └─ ❌ Tidak ada settings tersimpan');
     }
     
-    // 3. INFO OBSERVABLE STATE
+    
     print('\n🔄 OBSERVABLE STATE (GetX):');
     print('   └─ cartItems.length: ${cartItems.length}');
     
     print('\n╚═══════════════════════════════════════════════╝\n');
   }
 
-  // --- FETCH MENU ---
+  
   Future<void> fetchMenuItems() async {
     try {
       isLoading.value = true;
@@ -288,7 +287,7 @@ class MenuController extends GetxController {
     }
   }
 
-  // --- NOTIFIKASI ---
+  
   void _showOfflineSnackbar() {
     if (Get.isSnackbarOpen) return;
     Get.snackbar(

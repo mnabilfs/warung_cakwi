@@ -44,10 +44,16 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
+  firebase_core: ^4.2.1
   cupertino_icons: ^1.0.8
   supabase_flutter: ^2.10.3
   flutter_dotenv: ^6.0.0
   hive_flutter: ^1.1.0
+
+  geolocator: ^13.0.0 # Atau versi terbaru
+  flutter_map: ^7.0.0 # Untuk menampilkan peta OpenStreetMap
+  latlong2: ^0.9.1    # Untuk koordinat
+  permission_handler: ^11.3.1 # Untuk izin lokasi
 
 dev_dependencies:
   flutter_test:
