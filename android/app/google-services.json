@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "652813445754",
+    "project_id": "bakso-cakwi",
+    "storage_bucket": "bakso-cakwi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:652813445754:android:8db2fa9458b181b874e9c3",
+        "android_client_info": {
+          "package_name": "com.example.gerai_bakso"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1fp53LeBpTVyNmPup6z6FMKrXOHjfHik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
