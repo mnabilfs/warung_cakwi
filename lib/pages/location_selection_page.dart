@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-// Import View yang sudah Anda miliki
+// Import View yang sudah miliki
 import '../../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/view/network_location_view.dart';
 import '../../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/view/gps_location_view.dart';
 import '../../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/view/location_view.dart';
