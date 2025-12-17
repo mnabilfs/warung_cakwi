@@ -4,11 +4,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-// Import Halaman
+
 import 'pages/login_page.dart';   
 import 'pages/landing_page.dart';  
 
-// Import Controllers
+
 import 'data/models/menu_item.dart';
 import 'data/controllers/theme_controller.dart';
 import 'data/controllers/menu_controller.dart';
@@ -59,8 +59,8 @@ class WarungCakwiApp extends StatelessWidget {
           ? ThemeMode.dark
           : ThemeMode.light,
 
-      // 🔴 PENTING: Gunakan AuthGate sebagai halaman awal
-      // Ini yang bikin aplikasi "ingat" kalau user sudah login
+      
+      
       home: const AuthGate(),
 
       getPages: [
@@ -72,21 +72,21 @@ class WarungCakwiApp extends StatelessWidget {
   }
 }
 
-// 🔴 WIDGET BARU: Penjaga Pintu (AuthGate)
-// Tugasnya cuma satu: Mengarahkan user ke Login atau Home
+
+
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Cek langsung ke Supabase: Ada user yang nempel gak?
+    
     final session = Supabase.instance.client.auth.currentSession;
 
     if (session != null) {
-      // JIKA SUDAH LOGIN -> Masuk Home
+      
       return LandingPage();
     } else {
-      // JIKA BELUM -> Masuk Login
+      
       return const LoginPage();
     }
   }

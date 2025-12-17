@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-// --- IMPORT CONTROLLERS ---
-import '../data/controllers/menu_controller.dart' as my; // Pakai alias 'my' sesuai kode Anda
+
+import '../data/controllers/menu_controller.dart' as my; 
 import '../data/controllers/auth_controller.dart';
 
-// --- IMPORT WIDGETS & PAGES ---
+
 import '../widgets/banner/view/banner_view.dart';
 import '../widgets/cart/mengatur_tombol_keranjang/view/cartbutton_view.dart';
 import 'app_drawer.dart';
@@ -14,9 +14,9 @@ import 'cart_page.dart';
 class LandingPage extends StatelessWidget {
   LandingPage({super.key});
 
-  // Inisialisasi Controller
+  
   final my.MenuController controller = Get.put(my.MenuController());
-  final AuthController authC = Get.find<AuthController>(); // Ambil AuthController untuk Logout
+  final AuthController authC = Get.find<AuthController>(); 
 
   Future<void> _navigateToCart(BuildContext context) async {
     await Navigator.of(context).push(
@@ -37,9 +37,9 @@ class LandingPage extends StatelessWidget {
           ),
         ),
         backgroundColor: const Color(0xFF2D2D2D),
-        iconTheme: const IconThemeData(color: Color(0xFFD4A017)), // Warna Ikon Drawer
+        iconTheme: const IconThemeData(color: Color(0xFFD4A017)), 
         actions: [
-          // 1. TOMBOL LOGOUT (Permintaan Anda sebelumnya)
+          
           IconButton(
             icon: const Icon(Icons.logout, color: Color(0xFFD4A017)),
             tooltip: "Keluar Aplikasi",
@@ -56,14 +56,14 @@ class LandingPage extends StatelessWidget {
                 buttonColor: const Color(0xFFD4A017),
                 cancelTextColor: const Color(0xFFD4A017),
                 onConfirm: () {
-                  Get.back(); // Tutup dialog
-                  authC.logout(); // Jalankan fungsi logout
+                  Get.back(); 
+                  authC.logout(); 
                 },
               );
             },
           ),
           
-          // 2. TOMBOL KERANJANG
+          
           Obx(() => CartButtonView(
             itemCount: controller.cartItems.length,
             onPressed: () => _navigateToCart(context),
@@ -72,7 +72,7 @@ class LandingPage extends StatelessWidget {
       ),
       drawer: const AppDrawer(),
       
-      // --- BODY UTAMA ---
+      
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator(color: Color(0xFFD4A017)));
@@ -100,7 +100,7 @@ class LandingPage extends StatelessWidget {
     );
   }
 
-  // --- BAGIAN UI MENU ---
+  
 
   Widget _buildMenuSection(List items) {
     return LayoutBuilder(
@@ -113,7 +113,7 @@ class LandingPage extends StatelessWidget {
           children: [
             _buildSectionHeader(),
             _buildMenuGrid(context, items, crossAxisCount, isWide),
-            const SizedBox(height: 20), // Tambahan padding bawah
+            const SizedBox(height: 20), 
           ],
         );
       },
@@ -157,7 +157,7 @@ class LandingPage extends StatelessWidget {
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        // Sesuaikan rasio agar kartu tidak gepeng
+        
         childAspectRatio: isWide ? 2.5 : 3.0, 
       ),
       itemBuilder: (context, index) {
@@ -184,11 +184,11 @@ class LandingPage extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Bagian Kiri: Icon/Gambar
+            
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Hero(
-                tag: menuItem.name, // Animasi Hero
+                tag: menuItem.name, 
                 child: Container(
                   width: 60,
                   height: 60,
@@ -198,7 +198,7 @@ class LandingPage extends StatelessWidget {
                     border: Border.all(color: const Color(0xFFD4A017).withOpacity(0.5)),
                   ),
                   child: Icon(
-                    menuItem.icon ?? Icons.fastfood, // Gunakan default icon jika null
+                    menuItem.icon ?? Icons.fastfood, 
                     color: const Color(0xFFD4A017),
                     size: 30,
                   ),
@@ -206,7 +206,7 @@ class LandingPage extends StatelessWidget {
               ),
             ),
             
-            // Bagian Tengah: Teks
+            
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,7 +233,7 @@ class LandingPage extends StatelessWidget {
               ),
             ),
 
-            // Bagian Kanan: Harga & Tombol Add
+            
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
@@ -270,7 +270,7 @@ class LandingPage extends StatelessWidget {
     );
   }
 
-  // --- FORMAT HARGA ---
+  
   String _formatPrice(int price) {
     return price.toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
@@ -278,7 +278,7 @@ class LandingPage extends StatelessWidget {
     );
   }
 
-  // --- POPUP DETAIL MENU ---
+  
   void _showMenuDetail(BuildContext context, dynamic menuItem) {
     showDialog(
       context: context,
@@ -301,7 +301,7 @@ class LandingPage extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Icon Besar
+                
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: const BoxDecoration(
@@ -316,7 +316,7 @@ class LandingPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 
-                // Nama Makanan
+                
                 Text(
                   menuItem.name,
                   style: const TextStyle(
@@ -328,7 +328,7 @@ class LandingPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 
-                // Deskripsi
+                
                 Text(
                   menuItem.description,
                   textAlign: TextAlign.center,
@@ -339,7 +339,7 @@ class LandingPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 
-                // Garis Pemisah
+                
                 Container(
                   height: 1,
                   width: double.infinity,
@@ -347,7 +347,7 @@ class LandingPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 
-                // Harga
+                
                 Text(
                   'Harga: Rp ${_formatPrice(menuItem.price)}',
                   style: const TextStyle(
@@ -358,7 +358,7 @@ class LandingPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 25),
                 
-                // Tombol Tambah
+                
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFD4A017),
@@ -373,7 +373,7 @@ class LandingPage extends StatelessWidget {
                   ),
                   onPressed: () {
                     controller.addToCart(menuItem);
-                    Navigator.pop(context); // Tutup dialog
+                    Navigator.pop(context); 
                   },
                   icon: const Icon(Icons.add_shopping_cart),
                   label: const Text(
