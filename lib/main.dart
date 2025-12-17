@@ -2,14 +2,20 @@ import 'package:flutter/material.dart' hide MenuController;
 import 'package:get/get.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+// import 'package:hive_flutter/hive_flutter.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'firebase_options.dart';
 
-import 'pages/login_page.dart';   
-import 'pages/landing_page.dart';  
+import 'data/providers/notification_provider.dart';
+import 'data/services/local_storage_service.dart';
+import 'data/services/notification_handler.dart';
 
+import 'pages/login_page.dart';
+import 'pages/landing_page.dart';
 
-import 'data/models/menu_item.dart';
+// import 'data/models/menu_item.dart';
 import 'data/controllers/theme_controller.dart';
 import 'data/controllers/menu_controller.dart';
 import 'data/controllers/auth_controller.dart';
@@ -19,17 +25,32 @@ void main() async {
 
   await dotenv.load(fileName: ".env");
 
-  await Hive.initFlutter();
-  Hive.registerAdapter(MenuItemAdapter());
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // await Hive.initFlutter();
+  // Hive.registerAdapter(MenuItemAdapter());
+
+  FirebaseMessaging.onBackgroundMessage(
+    firebaseMessagingBackgroundHandler,
+  );
+
+  await Get.putAsync<LocalStorageService>(
+    () async => await LocalStorageService().init(),
+  );
 
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
+  Get.put(NotificationProvider());
   Get.put(AuthController());
   Get.put(ThemeController());
   Get.put(MenuController());
+
+  final notificationHandler = NotificationHandler();
+  await notificationHandler.initLocalNotification();
+  await notificationHandler.initPushNotification();
 
   runApp(const WarungCakwiApp());
 }
@@ -59,8 +80,6 @@ class WarungCakwiApp extends StatelessWidget {
           ? ThemeMode.dark
           : ThemeMode.light,
 
-      
-      
       home: const AuthGate(),
 
       getPages: [
@@ -72,21 +91,16 @@ class WarungCakwiApp extends StatelessWidget {
   }
 }
 
-
-
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    
     final session = Supabase.instance.client.auth.currentSession;
 
     if (session != null) {
-      
       return LandingPage();
     } else {
-      
       return const LoginPage();
     }
   }
