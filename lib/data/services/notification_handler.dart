@@ -100,17 +100,36 @@ class NotificationHandler {
     required String title,
     required String body,
   }) async {
+    // Request permission for Android 13+
+    final androidPlugin = _localNotification
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      await androidPlugin.requestNotificationsPermission();
+    }
+
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
-        'channel_notification',
-        'High Importance Notification',
+        'order_channel',
+        'Order Notification',
+        channelDescription: 'Notifikasi untuk pesanan',
         importance: Importance.max,
         priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('order'),
+        enableVibration: true,
+        showWhen: true,
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        sound: 'ordew.mp3',
       ),
     );
 
     await _localNotification.show(
-      DateTime.now().millisecondsSinceEpoch,
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title,
       body,
       details,
