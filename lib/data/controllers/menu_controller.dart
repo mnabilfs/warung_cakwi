@@ -219,6 +219,33 @@ class MenuController extends GetxController {
     
     _debugPrintHiveData();
   }
+
+  // Clear all cart items after successful checkout
+  void clearCart() async {
+    bool isUserLoggedIn = false;
+    if (Get.isRegistered<AuthController>()) {
+      isUserLoggedIn = Get.find<AuthController>().isLoggedIn;
+    }
+
+    // Clear observable list
+    cartItems.clear();
+
+    if (isUserLoggedIn) {
+      try {
+        final userId = _supabase.auth.currentUser!.id;
+        await _supabase.from('cart_items').delete().eq('user_id', userId);
+        cloudCartIds.clear();
+      } catch (e) {
+        print("⚠️ Gagal menghapus cart dari Cloud: $e");
+      }
+    }
+
+    // Clear local storage
+    await cartBox.clear();
+    await settingsBox.put('has_offline_changes', false);
+
+    _debugPrintHiveData();
+  }
     
     
     void _debugPrintHiveData() {
