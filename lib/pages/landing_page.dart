@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-
 import '../data/controllers/menu_controller.dart' as my; 
 import '../data/controllers/auth_controller.dart';
 
@@ -10,18 +9,48 @@ import '../widgets/cart/mengatur_tombol_keranjang/view/cartbutton_view.dart';
 import 'app_drawer.dart';
 import 'cart_page.dart';
 
+import 'package:flutter/foundation.dart';
+
 import 'admin_dashboard_page.dart';
 
-class LandingPage extends StatelessWidget {
-  LandingPage({super.key});
+class LandingPage extends StatefulWidget { // ✅ Ubah ke StatefulWidget
+  const LandingPage({super.key});
 
-  
+  @override
+  State<LandingPage> createState() => _LandingPageState();
+}
+
+class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver { // ✅ Tambahkan observer
   final my.MenuController controller = Get.put(my.MenuController());
   final AuthController authC = Get.find<AuthController>(); 
 
+  @override
+  void initState() {
+    super.initState();
+    // ✅ Register observer untuk detect app lifecycle
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    // ✅ Unregister observer
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // ✅ Refresh saat app kembali ke foreground (resumed)
+    if (state == AppLifecycleState.resumed) {
+      controller.fetchMenuItems();
+      if (kDebugMode) print('✅ App resumed - Menu refreshed');
+    }
+  }
+
   Future<void> _navigateToCart(BuildContext context) async {
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => CartPage()),
+      MaterialPageRoute(builder: (_) => const CartPage()),
     );
   }
 
@@ -40,19 +69,20 @@ class LandingPage extends StatelessWidget {
         backgroundColor: const Color(0xFF2D2D2D),
         iconTheme: const IconThemeData(color: Color(0xFFD4A017)), 
         actions: [
-          // TAMBAHKAN INI - Tombol Admin Dashboard (hanya muncul untuk admin)
-Obx(() {
-  if (authC.isAdmin) {
-    return IconButton(
-      icon: const Icon(Icons.admin_panel_settings, color: Color(0xFFD4A017)),
-      tooltip: "Admin Dashboard",
-      onPressed: () {
-        Get.to(() => AdminDashboardPage());
-      },
-    );
-  }
-  return const SizedBox.shrink();
-}),
+          Obx(() {
+            if (authC.isAdmin) {
+              return IconButton(
+                icon: const Icon(Icons.admin_panel_settings, color: Color(0xFFD4A017)),
+                tooltip: "Admin Dashboard",
+                onPressed: () async {
+                  // ✅ Refresh menu saat kembali dari admin dashboard
+                  await Get.to(() => AdminDashboardPage());
+                  controller.fetchMenuItems();
+                },
+              );
+            }
+            return const SizedBox.shrink();
+          }),
           
           IconButton(
             icon: const Icon(Icons.logout, color: Color(0xFFD4A017)),
@@ -77,7 +107,6 @@ Obx(() {
             },
           ),
           
-          
           Obx(() => CartButtonView(
             itemCount: controller.cartItems.length,
             onPressed: () => _navigateToCart(context),
@@ -85,7 +114,6 @@ Obx(() {
         ],
       ),
       drawer: const AppDrawer(),
-      
       
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -114,8 +142,8 @@ Obx(() {
     );
   }
 
+  // ... rest of the code remains the same ...
   
-
   Widget _buildMenuSection(List items) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -171,7 +199,6 @@ Obx(() {
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        
         childAspectRatio: isWide ? 2.5 : 3.0, 
       ),
       itemBuilder: (context, index) {
@@ -198,7 +225,6 @@ Obx(() {
         ),
         child: Row(
           children: [
-            
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Hero(
@@ -211,15 +237,41 @@ Obx(() {
                     shape: BoxShape.circle,
                     border: Border.all(color: const Color(0xFFD4A017).withOpacity(0.5)),
                   ),
-                  child: Icon(
-                    menuItem.icon ?? Icons.fastfood, 
-                    color: const Color(0xFFD4A017),
-                    size: 30,
+                  child: ClipOval(
+                    child: menuItem.imageUrl != null && menuItem.imageUrl!.isNotEmpty
+                        ? Image.network(
+                            menuItem.imageUrl!,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                  strokeWidth: 2,
+                                  color: const Color(0xFFD4A017),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                menuItem.icon ?? Icons.fastfood,
+                                color: const Color(0xFFD4A017),
+                                size: 30,
+                              );
+                            },
+                          )
+                        : Icon(
+                            menuItem.icon ?? Icons.fastfood,
+                            color: const Color(0xFFD4A017),
+                            size: 30,
+                          ),
                   ),
                 ),
               ),
             ),
-            
             
             Expanded(
               child: Column(
@@ -247,7 +299,6 @@ Obx(() {
               ),
             ),
 
-            
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
@@ -284,7 +335,6 @@ Obx(() {
     );
   }
 
-  
   String _formatPrice(int price) {
     return price.toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
@@ -292,7 +342,6 @@ Obx(() {
     );
   }
 
-  
   void _showMenuDetail(BuildContext context, dynamic menuItem) {
     showDialog(
       context: context,
@@ -315,21 +364,59 @@ Obx(() {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF3D3D3D),
-                    shape: BoxShape.circle,
+                if (menuItem.imageUrl != null && menuItem.imageUrl!.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      menuItem.imageUrl!,
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return SizedBox(
+                          height: 200,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                              color: const Color(0xFFD4A017),
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 200,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF3D3D3D),
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                          ),
+                          child: Icon(
+                            menuItem.icon ?? Icons.fastfood,
+                            size: 80,
+                            color: const Color(0xFFD4A017),
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF3D3D3D),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      menuItem.icon ?? Icons.fastfood,
+                      size: 80,
+                      color: const Color(0xFFD4A017),
+                    ),
                   ),
-                  child: Icon(
-                    menuItem.icon ?? Icons.fastfood,
-                    size: 80,
-                    color: const Color(0xFFD4A017),
-                  ),
-                ),
                 const SizedBox(height: 20),
-                
                 
                 Text(
                   menuItem.name,
@@ -342,7 +429,6 @@ Obx(() {
                 ),
                 const SizedBox(height: 10),
                 
-                
                 Text(
                   menuItem.description,
                   textAlign: TextAlign.center,
@@ -353,14 +439,12 @@ Obx(() {
                 ),
                 const SizedBox(height: 20),
                 
-                
                 Container(
                   height: 1,
                   width: double.infinity,
                   color: const Color(0xFFD4A017).withOpacity(0.3),
                 ),
                 const SizedBox(height: 20),
-                
                 
                 Text(
                   'Harga: Rp ${_formatPrice(menuItem.price)}',
@@ -371,7 +455,6 @@ Obx(() {
                   ),
                 ),
                 const SizedBox(height: 25),
-                
                 
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
