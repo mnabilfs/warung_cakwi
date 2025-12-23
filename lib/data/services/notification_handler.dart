@@ -67,6 +67,8 @@ class NotificationHandler {
             _androidChannel.name,
             channelDescription: _androidChannel.description,
             icon: '@mipmap/ic_launcher',
+                    playSound: true,
+        sound: RawResourceAndroidNotificationSound('order'),
           ),
         ),
         payload: jsonEncode(message.toMap()),

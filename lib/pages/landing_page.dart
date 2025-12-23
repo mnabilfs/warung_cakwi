@@ -5,11 +5,12 @@ import 'package:get/get.dart';
 import '../data/controllers/menu_controller.dart' as my; 
 import '../data/controllers/auth_controller.dart';
 
-
 import '../widgets/banner/view/banner_view.dart';
 import '../widgets/cart/mengatur_tombol_keranjang/view/cartbutton_view.dart';
 import 'app_drawer.dart';
 import 'cart_page.dart';
+
+import 'admin_dashboard_page.dart';
 
 class LandingPage extends StatelessWidget {
   LandingPage({super.key});
@@ -39,6 +40,19 @@ class LandingPage extends StatelessWidget {
         backgroundColor: const Color(0xFF2D2D2D),
         iconTheme: const IconThemeData(color: Color(0xFFD4A017)), 
         actions: [
+          // TAMBAHKAN INI - Tombol Admin Dashboard (hanya muncul untuk admin)
+Obx(() {
+  if (authC.isAdmin) {
+    return IconButton(
+      icon: const Icon(Icons.admin_panel_settings, color: Color(0xFFD4A017)),
+      tooltip: "Admin Dashboard",
+      onPressed: () {
+        Get.to(() => AdminDashboardPage());
+      },
+    );
+  }
+  return const SizedBox.shrink();
+}),
           
           IconButton(
             icon: const Icon(Icons.logout, color: Color(0xFFD4A017)),
