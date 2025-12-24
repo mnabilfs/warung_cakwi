@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart';
 import 'admin_dashboard_page.dart';
 
 import '../widgets/home/ai_recommendation_banner.dart';
+import '../utils/error_helper.dart'; // ✅ ERROR RECOVERY
 
 class LandingPage extends StatefulWidget { // ✅ Ubah ke StatefulWidget
   const LandingPage({super.key});
@@ -128,22 +129,107 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
         if (controller.isLoading.value) {
           return Center(child: CircularProgressIndicator(color: colorScheme.primary));
         } else if (controller.errorMessage.isNotEmpty) {
-          return Center(
-            child: Text('Gagal memuat data: ${controller.errorMessage}', 
-              style: TextStyle(color: colorScheme.onSurface)),
+          // ✅ ERROR RECOVERY: Use ErrorStateWidget with retry
+          return ErrorStateWidget(
+            errorMessage: controller.errorMessage.value,
+            onRetry: () => controller.fetchMenuItems(),
           );
         } else if (controller.menuItems.isEmpty) {
           return Center(child: Text('Tidak ada data.', 
               style: TextStyle(color: colorScheme.onSurface)));
         }
 
-        final items = controller.menuItems;
+        // ✅ FLEXIBILITY: Use filtered items for search
+        final items = controller.filteredMenuItems;
 
         return SingleChildScrollView(
           child: Column(
             children: [
+              // 🔍 MARKER: SEARCH_BAR
+              // ✅ FLEXIBILITY: Search Bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: TextField(
+                  onChanged: (value) => controller.searchQuery.value = value,
+                  style: TextStyle(color: colorScheme.onSurface),
+                  decoration: InputDecoration(
+                    hintText: 'Cari menu favorit...',
+                    hintStyle: TextStyle(color: colorScheme.onSurface.withOpacity(0.5)),
+                    prefixIcon: Icon(Icons.search, color: colorScheme.primary),
+                    suffixIcon: Obx(() => controller.searchQuery.value.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(Icons.clear, color: colorScheme.onSurface.withOpacity(0.5)),
+                            onPressed: () {
+                              controller.clearSearch();
+                              FocusScope.of(context).unfocus();
+                            },
+                          )
+                        : const SizedBox.shrink()),
+                    filled: true,
+                    fillColor: colorScheme.surfaceContainerHighest,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                    ),
+                  ),
+                ),
+              ),
+              
               const BannerView(),
-              _buildMenuSection(context, items),
+              
+              // ✅ FLEXIBILITY: Show search results count when searching
+              if (controller.searchQuery.value.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.filter_list, size: 16, color: colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Ditemukan ${items.length} menu',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              
+              // ✅ FLEXIBILITY: Empty state for no search results
+              if (items.isEmpty && controller.searchQuery.value.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        size: 64,
+                        color: colorScheme.onSurface.withOpacity(0.3),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Menu tidak ditemukan',
+                        style: textTheme.titleMedium?.copyWith(
+                          color: colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Coba kata kunci lain',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurface.withOpacity(0.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                _buildMenuSection(context, items),
             ],
           ),
         );
@@ -153,7 +239,7 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
 
   // ... rest of the code remains the same ...
   
-Widget _buildMenuSection(List items) {
+Widget _buildMenuSection(BuildContext context, List items) {
   return LayoutBuilder(
     builder: (context, constraints) {
       final bool isWide = constraints.maxWidth > 600;
@@ -165,7 +251,7 @@ Widget _buildMenuSection(List items) {
           // ✅ TAMBAHAN BARU: AI Recommendation Banner
           const AIRecommendationBanner(),
           
-          _buildSectionHeader(),
+          _buildSectionHeader(context),
           _buildMenuGrid(context, items, crossAxisCount, isWide),
           const SizedBox(height: 20), 
         ],

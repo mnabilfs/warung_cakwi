@@ -76,6 +76,7 @@ class _CartPageState extends State<CartPage> {
               itemCount: items.length, 
               totalPrice: total,
               onCheckout: _showCheckoutDialog,
+              isProcessing: controller.isProcessingCheckout.value, // ✅ Pass state
             ),
           ],
         );
@@ -112,87 +113,147 @@ class _CartPageState extends State<CartPage> {
     
   }
 
+  // 🔍 MARKER: ERROR_PREVENTION_CHECKOUT
   void _showCheckoutDialog() {
     String? selectedPaymentMethod;
     
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          backgroundColor: const Color(0xFF2D2D2D),
-          title: const Text(
-            'Pilih Metode Pembayaran',
-            style: TextStyle(color: Color(0xFFD4A017)),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Total: Rp ${PriceFormatter.format(totalPrice)}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+      barrierDismissible: false, // ✅ Prevent dismissing during process
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => Obx(() {
+          final isProcessing = controller.isProcessingCheckout.value;
+          
+          return AlertDialog(
+            backgroundColor: const Color(0xFF2D2D2D),
+            title: const Text(
+              'Pilih Metode Pembayaran',
+              style: TextStyle(color: Color(0xFFD4A017)),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Total: Rp ${PriceFormatter.format(totalPrice)}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Metode Pembayaran:',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-              const SizedBox(height: 12),
-              // Bayar di Tempat - Active
-              _buildPaymentMethodCard(
-                title: 'Bayar di Tempat',
-                subtitle: 'Bayar saat pesanan diantar',
-                icon: Icons.payments_outlined,
-                isSelected: selectedPaymentMethod == 'cod',
-                isEnabled: true,
-                onTap: () {
-                  setState(() {
-                    selectedPaymentMethod = 'cod';
-                  });
-                },
-              ),
-              const SizedBox(height: 10),
-              // QRIS - Coming Soon
-              _buildPaymentMethodCard(
-                title: 'QRIS',
-                subtitle: 'Scan QR untuk pembayaran',
-                icon: Icons.qr_code_2,
-                isSelected: false,
-                isEnabled: false,
-                badge: 'Segera Hadir',
-                onTap: null,
+                const SizedBox(height: 20),
+                const Text(
+                  'Metode Pembayaran:',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 12),
+                // Bayar di Tempat - Active
+                AbsorbPointer(
+                  absorbing: isProcessing, // ✅ Disable saat processing
+                  child: Opacity(
+                    opacity: isProcessing ? 0.5 : 1.0,
+                    child: _buildPaymentMethodCard(
+                      title: 'Bayar di Tempat',
+                      subtitle: 'Bayar saat pesanan diantar',
+                      icon: Icons.payments_outlined,
+                      isSelected: selectedPaymentMethod == 'cod',
+                      isEnabled: true,
+                      onTap: () {
+                        setDialogState(() {
+                          selectedPaymentMethod = 'cod';
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // QRIS - Coming Soon
+                _buildPaymentMethodCard(
+                  title: 'QRIS',
+                  subtitle: 'Scan QR untuk pembayaran',
+                  icon: Icons.qr_code_2,
+                  isSelected: false,
+                  isEnabled: false,
+                  badge: 'Segera Hadir',
+                  onTap: null,
+                ),
+              ],
+            ),
+            actions: [
+              // ✅ Hide cancel during processing
+              if (!isProcessing)
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text(
+                    'Batal',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: (selectedPaymentMethod != null && !isProcessing)
+                      ? const Color(0xFFD4A017) 
+                      : Colors.grey,
+                  foregroundColor: Colors.black,
+                ),
+                // ✅ ERROR PREVENTION: Disable saat processing atau belum pilih
+                onPressed: (selectedPaymentMethod != null && !isProcessing)
+                    ? () async {
+                        // ✅ Check if already processing
+                        if (controller.isProcessingCheckout.value) {
+                          Get.snackbar(
+                            'Mohon Tunggu',
+                            'Checkout sedang diproses...',
+                            backgroundColor: Colors.orange,
+                            colorText: Colors.white,
+                          );
+                          return;
+                        }
+                        
+                        // ✅ Set processing state
+                        controller.isProcessingCheckout.value = true;
+                        
+                        try {
+                          // Simulasi proses checkout (ganti dengan API call sebenarnya)
+                          await Future.delayed(const Duration(seconds: 1));
+                          
+                          Navigator.pop(dialogContext);
+                          _showSuccessMessage(selectedPaymentMethod!);
+                        } catch (e) {
+                          Get.snackbar(
+                            'Gagal',
+                            'Terjadi kesalahan: $e',
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                        } finally {
+                          // ✅ Reset processing state
+                          controller.isProcessingCheckout.value = false;
+                        }
+                      }
+                    : null,
+                child: isProcessing
+                    ? const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Memproses...'),
+                        ],
+                      )
+                    : const Text('Lanjutkan'),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Batal',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: selectedPaymentMethod != null 
-                    ? const Color(0xFFD4A017) 
-                    : Colors.grey,
-                foregroundColor: Colors.black,
-              ),
-              onPressed: selectedPaymentMethod != null
-                  ? () {
-                      Navigator.pop(context);
-                      _showSuccessMessage(selectedPaymentMethod!);
-                    }
-                  : null,
-              child: const Text('Lanjutkan'),
-            ),
-          ],
-        ),
+          );
+        }),
       ),
     );
   }

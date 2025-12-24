@@ -10,6 +10,7 @@ import '../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/view/locatio
 import '../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/bindings/location_binding.dart';
 
 import '../pages/weather_recommendation_page.dart';
+import '../pages/help_page.dart'; // ✅ HELP & DOCUMENTATION
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -159,6 +160,19 @@ DrawerMenuView(
             subtitle: 'Setiap Hari: 08.00 - 21.00',
             textColor: colorScheme.onSurface,
             onTap: () => Navigator.pop(context),
+          ),
+
+          // ✅ 6. MENU BANTUAN (HELP & DOCUMENTATION)
+          DrawerMenuView(
+            icon: Icons.help_outline,
+            iconColor: Colors.teal,
+            title: 'Bantuan',
+            subtitle: 'FAQ & Hubungi Kami',
+            textColor: colorScheme.onSurface,
+            onTap: () {
+              Navigator.pop(context);
+              Get.to(() => const HelpPage());
+            },
           ),
 
           Divider(color: colorScheme.outline.withOpacity(0.5)),

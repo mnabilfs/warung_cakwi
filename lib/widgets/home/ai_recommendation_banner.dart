@@ -4,6 +4,7 @@ import 'dart:async';
 import '../../data/controllers/weather_recommendation_controller.dart';
 import '../../pages/weather_recommendation_page.dart';
 
+// 🔍 MARKER: AESTHETIC_MINIMALIST_AI_BANNER
 class AIRecommendationBanner extends StatefulWidget {
   const AIRecommendationBanner({super.key});
 
@@ -22,7 +23,6 @@ class _AIRecommendationBannerState extends State<AIRecommendationBanner> {
     super.initState();
     _controller = Get.put(WeatherRecommendationController());
     
-    // Start text rotation setelah data loaded
     ever(_controller.recommendation, (_) {
       if (_controller.recommendation.value.isNotEmpty) {
         _buildTexts();
@@ -31,37 +31,23 @@ class _AIRecommendationBannerState extends State<AIRecommendationBanner> {
     });
   }
 
+  // ✅ AESTHETIC: Shorter, more concise texts
   void _buildTexts() {
     _texts.clear();
     final weather = _controller.currentWeather.value;
     
     if (weather != null) {
-      // Text 1: Info cuaca
       final icon = _controller.getWeatherIcon(weather['main_weather']);
       final temp = weather['temperature'].toStringAsFixed(0);
-      final desc = weather['description'];
-      _texts.add('$icon Cuaca sekarang: $temp°C, $desc');
+      _texts.add('$icon $temp°C - Lihat rekomendasi menu');
       
-      // Text 2: Status hujan
       final mainWeather = weather['main_weather'];
       if (mainWeather == 'Rain' || mainWeather == 'Drizzle') {
-        _texts.add('🌧️ Sedang hujan! Cocok untuk makan hangat di warung');
+        _texts.add('🍜 Cuaca hujan, cocok untuk bakso hangat!');
       } else if (mainWeather == 'Clear') {
-        _texts.add('☀️ Cerah! Waktu yang tepat untuk mampir ke warung');
+        _texts.add('☀️ Cerah! Mampir ke Warung Cakwi');
       } else {
-        _texts.add('🌤️ Cuaca mendukung untuk berkunjung!');
-      }
-      
-      // Text 3: Rekomendasi menu singkat
-      final recommendation = _controller.recommendation.value;
-      final menuMatch = RegExp(r'(?:bakso|mie ayam|minuman)', caseSensitive: false)
-          .allMatches(recommendation.toLowerCase());
-      
-      if (menuMatch.isNotEmpty) {
-        final menus = menuMatch.map((m) => m.group(0)).toSet().take(2).join(' & ');
-        _texts.add('🍜 Rekomendasi AI: $menus pas untuk cuaca ini!');
-      } else {
-        _texts.add('🍜 AI merekomendasikan menu spesial untuk Anda!');
+        _texts.add('🍜 Menu spesial menanti Anda!');
       }
     }
   }
@@ -83,102 +69,59 @@ class _AIRecommendationBannerState extends State<AIRecommendationBanner> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Obx(() {
-      // Loading state
       if (_controller.isLoading.value) {
-        return _buildLoadingBanner();
+        return _buildLoadingBanner(colorScheme);
       }
 
-      // Error state
-      if (_controller.errorMessage.value.isNotEmpty) {
-        return const SizedBox.shrink(); // Hide banner if error
-      }
-
-      // Success state
-      if (_texts.isEmpty) {
+      if (_controller.errorMessage.value.isNotEmpty || _texts.isEmpty) {
         return const SizedBox.shrink();
       }
 
+      // ✅ AESTHETIC: More compact design
       return GestureDetector(
-        onTap: () {
-          Get.to(() => const WeatherRecommendationPage());
-        },
+        onTap: () => Get.to(() => const WeatherRecommendationPage()),
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                const Color(0xFFD4A017).withOpacity(0.9),
-                const Color(0xFFF4C430).withOpacity(0.9),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFD4A017).withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
+            color: colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
             children: [
-              // AI Icon with pulse animation
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.auto_awesome,
-                  color: Colors.white,
-                  size: 24,
-                ),
+              // ✅ AESTHETIC: Smaller icon
+              Icon(
+                Icons.auto_awesome,
+                color: colorScheme.onPrimaryContainer,
+                size: 18,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               
-              // Rotating text
+              // ✅ AESTHETIC: Shorter text
               Expanded(
                 child: Obx(() => AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.3),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      ),
-                    );
-                  },
+                  duration: const Duration(milliseconds: 400),
                   child: Text(
                     _texts.isNotEmpty ? _texts[_currentTextIndex.value] : '',
                     key: ValueKey(_currentTextIndex.value),
-                    style: const TextStyle(
-                      color: Colors.black87,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      height: 1.3,
+                    style: TextStyle(
+                      color: colorScheme.onPrimaryContainer,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 )),
               ),
               
-              const SizedBox(width: 8),
-              
-              // Arrow icon
-              const Icon(
+              Icon(
                 Icons.arrow_forward_ios,
-                color: Colors.black54,
-                size: 16,
+                color: colorScheme.onPrimaryContainer.withOpacity(0.5),
+                size: 12,
               ),
             ],
           ),
@@ -187,30 +130,31 @@ class _AIRecommendationBannerState extends State<AIRecommendationBanner> {
     });
   }
 
-  Widget _buildLoadingBanner() {
+  // ✅ AESTHETIC: Simpler loading state
+  Widget _buildLoadingBanner(ColorScheme colorScheme) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2D2D).withOpacity(0.5),
-        borderRadius: BorderRadius.circular(12),
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
-          const SizedBox(
-            width: 20,
-            height: 20,
+          SizedBox(
+            width: 14,
+            height: 14,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: Color(0xFFD4A017),
+              color: colorScheme.primary,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Text(
-            'AI sedang menganalisis cuaca & menu...',
+            'Memuat rekomendasi...',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
-              fontSize: 13,
+              color: colorScheme.onSurface.withOpacity(0.6),
+              fontSize: 12,
             ),
           ),
         ],

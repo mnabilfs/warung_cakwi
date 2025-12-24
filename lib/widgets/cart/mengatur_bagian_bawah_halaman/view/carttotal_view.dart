@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import '../../../../utils/price_formatter.dart';
 
+// 🔍 MARKER: ERROR_PREVENTION_CHECKOUT_BUTTON
 class CartTotalView extends StatelessWidget {
   final int itemCount;
   final int totalPrice;
   final VoidCallback onCheckout;
+  final bool isProcessing; // ✅ TAMBAHKAN parameter ini
 
   const CartTotalView({
     super.key,
     required this.itemCount,
     required this.totalPrice,
     required this.onCheckout,
+    this.isProcessing = false, // ✅ Default false
   });
 
-  bool get canCheckout => itemCount > 0;
+  bool get canCheckout => itemCount > 0 && !isProcessing; // ✅ Cek isProcessing
 
   @override
   Widget build(BuildContext context) {
@@ -75,20 +78,45 @@ class CartTotalView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
+          // ✅ ERROR PREVENTION: Checkout button dengan loading state
           ElevatedButton(
             onPressed: canCheckout ? onCheckout : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFD4A017),
               foregroundColor: Colors.black,
+              disabledBackgroundColor: Colors.grey,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.symmetric(vertical: 15),
             ),
-            child: const Text(
-              'Checkout',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
+            child: isProcessing
+                ? const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        'Memproses...',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )
+                : const Text(
+                    'Checkout',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
           ),
         ],
       ),
