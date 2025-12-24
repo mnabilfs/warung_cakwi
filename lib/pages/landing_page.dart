@@ -13,6 +13,8 @@ import 'package:flutter/foundation.dart';
 
 import 'admin_dashboard_page.dart';
 
+import '../widgets/home/ai_recommendation_banner.dart';
+
 class LandingPage extends StatefulWidget { // ✅ Ubah ke StatefulWidget
   const LandingPage({super.key});
 
@@ -151,23 +153,26 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
 
   // ... rest of the code remains the same ...
   
-  Widget _buildMenuSection(BuildContext context, List items) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isWide = constraints.maxWidth > 600;
-        final int crossAxisCount = isWide ? 2 : 1;
+Widget _buildMenuSection(List items) {
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final bool isWide = constraints.maxWidth > 600;
+      final int crossAxisCount = isWide ? 2 : 1;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader(context),
-            _buildMenuGrid(context, items, crossAxisCount, isWide),
-            const SizedBox(height: 20), 
-          ],
-        );
-      },
-    );
-  }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ✅ TAMBAHAN BARU: AI Recommendation Banner
+          const AIRecommendationBanner(),
+          
+          _buildSectionHeader(),
+          _buildMenuGrid(context, items, crossAxisCount, isWide),
+          const SizedBox(height: 20), 
+        ],
+      );
+    },
+  );
+}
 
   Widget _buildSectionHeader(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;

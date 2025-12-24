@@ -9,6 +9,8 @@ import '../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/view/locatio
 // import '../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/controller/location_controller.dart';
 import '../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/bindings/location_binding.dart';
 
+import '../pages/weather_recommendation_page.dart';
+
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
@@ -119,18 +121,35 @@ class AppDrawer extends StatelessWidget {
             },
           ),
 
-          // ✅ 4. MENU HUBUNGI KAMI
-          DrawerMenuView(
-            icon: Icons.chat,
-            iconColor: const Color(0xFF8FBC8F),
-            title: 'Hubungi Kami',
-            subtitle: 'WhatsApp: +62 823-3757-7433',
-            textColor: colorScheme.onSurface,
-            onTap: () {
-              Navigator.pop(context);
-              whatsappController.openWhatsApp(context);
-            },
-          ),
+            // ✅ 4. MENU HUBUNGI KAMI
+            DrawerMenuView(
+              icon: Icons.chat,
+              iconColor: const Color(0xFF8FBC8F),
+              title: 'Hubungi Kami',
+              subtitle: 'WhatsApp: +62 823-3757-7433',
+              textColor: themeController.isDarkMode.value
+                  ? Colors.white
+                  : Colors.black87,
+              onTap: () {
+                Navigator.pop(context);
+                whatsappController.openWhatsApp(context);
+              },
+            ),
+
+            // ✅ 3.5. MENU REKOMENDASI CUACA & MENU
+DrawerMenuView(
+  icon: Icons.wb_sunny,
+  iconColor: Colors.orange,
+  title: 'Rekomendasi AI',
+  subtitle: 'Cuaca & menu hari ini',
+  textColor: themeController.isDarkMode.value
+      ? Colors.white
+      : Colors.black87,
+  onTap: () {
+    Navigator.pop(context);
+    Get.to(() => const WeatherRecommendationPage());
+  },
+),
 
           // ✅ 5. MENU JAM OPERASIONAL
           DrawerMenuView(
