@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -43,6 +44,10 @@ class NotificationHandler {
       firebaseMessagingBackgroundHandler,
     );
 
+    // ✅ Subscribe to menu_updates topic to receive admin notifications
+    await _firebaseMessaging.subscribeToTopic('menu_updates');
+    print('📢 Subscribed to menu_updates topic');
+
     FirebaseMessaging.instance.getInitialMessage().then((message) {
       if (message != null) {
         _logNotification(
@@ -57,6 +62,12 @@ class NotificationHandler {
       final notification = message.notification;
       if (notification == null) return;
 
+      // ✅ Show popup dialog for foreground notifications
+      _showNotificationPopup(
+        title: notification.title ?? 'Notifikasi',
+        body: notification.body ?? '',
+      );
+
       _localNotification.show(
         notification.hashCode,
         notification.title,
@@ -67,8 +78,8 @@ class NotificationHandler {
             _androidChannel.name,
             channelDescription: _androidChannel.description,
             icon: '@mipmap/ic_launcher',
-                    playSound: true,
-        sound: RawResourceAndroidNotificationSound('order'),
+            playSound: true,
+            sound: RawResourceAndroidNotificationSound('order'),
           ),
         ),
         payload: jsonEncode(message.toMap()),
@@ -138,6 +149,81 @@ class NotificationHandler {
     );
 
     _logNotification(title, body, 'local');
+  }
+
+  /// ✅ Show popup dialog when notification received in foreground
+  void _showNotificationPopup({
+    required String title,
+    required String body,
+  }) {
+    if (Get.isDialogOpen == true) return; // Prevent multiple dialogs
+
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: const Color(0xFF2D2D2D),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD4A017).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.notifications_active,
+                color: Color(0xFFD4A017),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Color(0xFFD4A017),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          body,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text(
+              'Tutup',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD4A017),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () => Get.back(),
+            child: const Text(
+              'OK',
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
+        ],
+      ),
+      barrierDismissible: true,
+    );
   }
 
   void _logNotification(String? title, String? body, String type) {
