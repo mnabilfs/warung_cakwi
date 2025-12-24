@@ -1,11 +1,37 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class NavigationHelper {
   // Koordinat Warung Cakwi
   static const double warungLatitude = -7.901906;
   static const double warungLongitude = 112.582788;
   static const LatLng warungLocation = LatLng(warungLatitude, warungLongitude);
+
+  /// Ambil rute jalan sebenarnya (berkelok) dari OSRM
+  /// profile: driving | walking | cycling
+  static Future<List<LatLng>> generateRouteByRoad(
+    Position userPosition, {
+    String profile = 'driving',
+  }) async {
+    final url =
+        'https://router.project-osrm.org/route/v1/$profile/'
+        '${userPosition.longitude},${userPosition.latitude};'
+        '$warungLongitude,$warungLatitude'
+        '?overview=full&geometries=geojson';
+
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal mengambil rute');
+    }
+
+    final data = json.decode(response.body);
+    final List coordinates = data['routes'][0]['geometry']['coordinates'];
+
+    return coordinates.map<LatLng>((c) => LatLng(c[1], c[0])).toList();
+  }
 
   /// Hitung jarak menggunakan Geolocator (dalam meter)
   static double calculateDistance(Position userPosition) {
@@ -28,7 +54,7 @@ class NavigationHelper {
   }
 
   /// Estimasi waktu perjalanan
-  /// Asumsi: 
+  /// Asumsi:
   /// - Jalan kaki: 5 km/jam
   /// - Motor/Mobil: 40 km/jam (dalam kota)
   static Map<String, String> estimateTime(double distanceInMeters) {
