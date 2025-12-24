@@ -492,9 +492,13 @@ class LocationView extends StatelessWidget {
 
     return Obx(() {
       try {
-        final routeLine = NavigationHelper.generateRouteLine(
-          controller.currentPosition!,
-        );
+        if (controller.routePoints.isEmpty &&
+            controller.currentPosition != null &&
+            !controller.isFetchingRoute.value) {
+          controller.fetchRoute();
+        }
+
+        final routeLine = controller.routePoints;
 
         // Warna marker berubah sesuai GPS/Network mode
         final markerColor = controller.isGpsEnabled
@@ -537,8 +541,6 @@ class LocationView extends StatelessWidget {
                   points: routeLine,
                   strokeWidth: 4,
                   color: markerColor.shade600,
-                  borderColor: Colors.white,
-                  borderStrokeWidth: 2,
                 ),
               ],
             ),
