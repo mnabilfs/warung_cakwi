@@ -1,16 +1,18 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/menu_item.dart';
+import '../services/fcm_service.dart';
 import 'menu_controller.dart' as my; // ✅ Import MenuController
 
 class AdminController extends GetxController {
   final _supabase = Supabase.instance.client;
   final ImagePicker _picker = ImagePicker();
-  
+  final FcmService _fcmService = FcmService();
   var menuItems = <MenuItem>[].obs;
   var isLoading = false.obs;
   var errorMessage = ''.obs;
@@ -30,6 +32,17 @@ class AdminController extends GetxController {
       Get.find<my.MenuController>().fetchMenuItems();
       if (kDebugMode) print('✅ MenuController refreshed');
     }
+  }
+
+  // ✅ Helper method untuk send notification tanpa blocking UI
+  void _sendNotificationAsync(Future<bool> Function() notificationCall) {
+    // Fire and forget - don't await
+    unawaited(
+      notificationCall().catchError((e) {
+        if (kDebugMode) print('⚠️ FCM notification error (non-blocking): $e');
+        return false;
+      }),
+    );
   }
 
   /// Pilih gambar dari galeri
@@ -196,6 +209,10 @@ class AdminController extends GetxController {
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
+      
+      // ✅ Send notification to users about new menu (fire-and-forget)
+      _sendNotificationAsync(() => _fcmService.notifyMenuCreated(name));
+      
       return true;
     } catch (e) {
       Get.snackbar(
@@ -256,6 +273,10 @@ class AdminController extends GetxController {
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
+      
+      // ✅ Send notification to users about menu update (fire-and-forget)
+      _sendNotificationAsync(() => _fcmService.notifyMenuUpdated(name));
+      
       return true;
     } catch (e) {
       Get.snackbar(
@@ -270,7 +291,7 @@ class AdminController extends GetxController {
     }
   }
 
-  Future<bool> deleteMenuItem(int id, String? imageUrl) async {
+  Future<bool> deleteMenuItem(int id, String? imageUrl, {String? menuName}) async {
     try {
       isLoading.value = true;
       
@@ -291,6 +312,12 @@ class AdminController extends GetxController {
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
+      
+      // ✅ Send notification to users about menu deletion (fire-and-forget)
+      if (menuName != null) {
+        _sendNotificationAsync(() => _fcmService.notifyMenuDeleted(menuName));
+      }
+      
       return true;
     } catch (e) {
       Get.snackbar(
