@@ -148,7 +148,7 @@ class HelpPage extends StatelessWidget {
             icon: Icons.location_on,
             iconColor: Colors.red,
             title: 'Alamat',
-            subtitle: 'Jl. Contoh No. 123, Kota',
+            subtitle: 'Jln moh hatta No.114, Pendem, Kec. Junrejo, Kota Batu, Jawa Timur 65324, Indonesia',
             onTap: () {},
           ),
         ],
