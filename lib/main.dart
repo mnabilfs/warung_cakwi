@@ -20,6 +20,8 @@ import 'data/controllers/theme_controller.dart';
 import 'data/controllers/menu_controller.dart';
 import 'data/controllers/auth_controller.dart';
 
+import 'theme/app_theme.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -62,20 +64,13 @@ class WarungCakwiApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeController = Get.find<ThemeController>();
 
-    return GetMaterialApp(
+    return Obx(() => GetMaterialApp(
       title: 'Warung Cakwi',
       debugShowCheckedModeBanner: false,
 
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark().copyWith(
-        primaryColor: const Color(0xFFD4A017),
-        scaffoldBackgroundColor: const Color(0xFF1A1A1A),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFD4A017),
-          secondary: Color(0xFFD4A017),
-          surface: Color(0xFF2D2D2D),
-        ),
-      ),
+      // Material Design 3 Theme
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       themeMode: themeController.isDarkMode.value
           ? ThemeMode.dark
           : ThemeMode.light,
@@ -87,7 +82,7 @@ class WarungCakwiApp extends StatelessWidget {
         GetPage(name: '/login', page: () => const LoginPage()),
         GetPage(name: '/home', page: () => LandingPage()),
       ],
-    );
+    ));
   }
 }
 

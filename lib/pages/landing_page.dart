@@ -56,23 +56,30 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Bakso Ojolali Cakwi',
-          style: TextStyle(
+          style: textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: Color(0xFFD4A017),
+            color: colorScheme.primary,
           ),
         ),
-        backgroundColor: const Color(0xFF2D2D2D),
-        iconTheme: const IconThemeData(color: Color(0xFFD4A017)), 
+        backgroundColor: colorScheme.surfaceContainerHighest,
+        iconTheme: IconThemeData(color: colorScheme.primary), 
         actions: [
           Obx(() {
-            if (authC.isAdmin) {
+            // Access observable directly for GetX to track
+            final profile = authC.currentProfile.value;
+            final isAdmin = profile?.isAdmin ?? false;
+            
+            if (isAdmin) {
               return IconButton(
-                icon: const Icon(Icons.admin_panel_settings, color: Color(0xFFD4A017)),
+                icon: Icon(Icons.admin_panel_settings, color: colorScheme.primary),
                 tooltip: "Admin Dashboard",
                 onPressed: () async {
                   // ✅ Refresh menu saat kembali dari admin dashboard
@@ -85,20 +92,20 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
           }),
           
           IconButton(
-            icon: const Icon(Icons.logout, color: Color(0xFFD4A017)),
+            icon: Icon(Icons.logout, color: colorScheme.primary),
             tooltip: "Keluar Aplikasi",
             onPressed: () {
               Get.defaultDialog(
                 title: "Logout",
-                titleStyle: const TextStyle(color: Color(0xFFD4A017), fontWeight: FontWeight.bold),
+                titleStyle: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
                 middleText: "Apakah Anda yakin ingin keluar?",
-                middleTextStyle: const TextStyle(color: Colors.white),
-                backgroundColor: const Color(0xFF2D2D2D),
+                middleTextStyle: TextStyle(color: colorScheme.onSurface),
+                backgroundColor: colorScheme.surfaceContainerHighest,
                 textConfirm: "Ya, Keluar",
                 textCancel: "Batal",
-                confirmTextColor: Colors.black,
-                buttonColor: const Color(0xFFD4A017),
-                cancelTextColor: const Color(0xFFD4A017),
+                confirmTextColor: colorScheme.onPrimary,
+                buttonColor: colorScheme.primary,
+                cancelTextColor: colorScheme.primary,
                 onConfirm: () {
                   Get.back(); 
                   authC.logout(); 
@@ -117,15 +124,15 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
       
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFFD4A017)));
+          return Center(child: CircularProgressIndicator(color: colorScheme.primary));
         } else if (controller.errorMessage.isNotEmpty) {
           return Center(
             child: Text('Gagal memuat data: ${controller.errorMessage}', 
-              style: const TextStyle(color: Colors.white)),
+              style: TextStyle(color: colorScheme.onSurface)),
           );
         } else if (controller.menuItems.isEmpty) {
-          return const Center(child: Text('Tidak ada data.', 
-              style: TextStyle(color: Colors.white)));
+          return Center(child: Text('Tidak ada data.', 
+              style: TextStyle(color: colorScheme.onSurface)));
         }
 
         final items = controller.menuItems;
@@ -134,7 +141,7 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
           child: Column(
             children: [
               const BannerView(),
-              _buildMenuSection(items),
+              _buildMenuSection(context, items),
             ],
           ),
         );
@@ -144,7 +151,7 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
 
   // ... rest of the code remains the same ...
   
-  Widget _buildMenuSection(List items) {
+  Widget _buildMenuSection(BuildContext context, List items) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isWide = constraints.maxWidth > 600;
@@ -153,7 +160,7 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionHeader(),
+            _buildSectionHeader(context),
             _buildMenuGrid(context, items, crossAxisCount, isWide),
             const SizedBox(height: 20), 
           ],
@@ -162,7 +169,10 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildSectionHeader() {
+  Widget _buildSectionHeader(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       child: Row(
@@ -171,17 +181,16 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
             width: 4,
             height: 24,
             decoration: BoxDecoration(
-              color: const Color(0xFFD4A017),
+              color: colorScheme.primary,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(width: 10),
-          const Text(
+          Text(
             'Menu Pilihan',
-            style: TextStyle(
-              fontSize: 22,
+            style: textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: Color(0xFFD4A017),
+              color: colorScheme.primary,
             ),
           ),
         ],
@@ -209,11 +218,14 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
   }
 
   Widget _buildMenuCard(BuildContext context, dynamic menuItem) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    
     return GestureDetector(
       onTap: () => _showMenuDetail(context, menuItem),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF2D2D2D),
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -233,9 +245,9 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF3D3D3D),
+                    color: colorScheme.surface,
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFD4A017).withOpacity(0.5)),
+                    border: Border.all(color: colorScheme.primary.withOpacity(0.5)),
                   ),
                   child: ClipOval(
                     child: menuItem.imageUrl != null && menuItem.imageUrl!.isNotEmpty
@@ -251,21 +263,21 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
                                           loadingProgress.expectedTotalBytes!
                                       : null,
                                   strokeWidth: 2,
-                                  color: const Color(0xFFD4A017),
+                                  color: colorScheme.primary,
                                 ),
                               );
                             },
                             errorBuilder: (context, error, stackTrace) {
                               return Icon(
                                 menuItem.icon ?? Icons.fastfood,
-                                color: const Color(0xFFD4A017),
+                                color: colorScheme.primary,
                                 size: 30,
                               );
                             },
                           )
                         : Icon(
                             menuItem.icon ?? Icons.fastfood,
-                            color: const Color(0xFFD4A017),
+                            color: colorScheme.primary,
                             size: 30,
                           ),
                   ),
@@ -280,10 +292,9 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
                 children: [
                   Text(
                     menuItem.name,
-                    style: const TextStyle(
+                    style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.white,
+                      color: colorScheme.onSurface,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -291,7 +302,9 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
                   const SizedBox(height: 4),
                   Text(
                     menuItem.description,
-                    style: const TextStyle(fontSize: 12, color: Colors.white60),
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.6),
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -307,22 +320,21 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
                 children: [
                   Text(
                     'Rp ${_formatPrice(menuItem.price)}',
-                    style: const TextStyle(
-                      color: Color(0xFFD4A017),
+                    style: textTheme.labelLarge?.copyWith(
+                      color: colorScheme.primary,
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFD4A017).withOpacity(0.2),
+                      color: colorScheme.primary.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.add_shopping_cart,
-                      color: Color(0xFFD4A017),
+                      color: colorScheme.primary,
                       size: 20,
                     ),
                   ),
@@ -343,9 +355,12 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
   }
 
   void _showMenuDetail(BuildContext context, dynamic menuItem) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    
     showDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
           constraints: BoxConstraints(
@@ -353,10 +368,10 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
           ),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFF2D2D2D),
+            color: colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFFD4A017).withOpacity(0.3),
+              color: colorScheme.primary.withOpacity(0.3),
               width: 2,
             ),
           ),
@@ -382,7 +397,7 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
                                   ? loadingProgress.cumulativeBytesLoaded /
                                       loadingProgress.expectedTotalBytes!
                                   : null,
-                              color: const Color(0xFFD4A017),
+                              color: colorScheme.primary,
                             ),
                           ),
                         );
@@ -390,14 +405,14 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           height: 200,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF3D3D3D),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surface,
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                           child: Icon(
                             menuItem.icon ?? Icons.fastfood,
                             size: 80,
-                            color: const Color(0xFFD4A017),
+                            color: colorScheme.primary,
                           ),
                         );
                       },
@@ -406,24 +421,23 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
                 else
                   Container(
                     padding: const EdgeInsets.all(20),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF3D3D3D),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       menuItem.icon ?? Icons.fastfood,
                       size: 80,
-                      color: const Color(0xFFD4A017),
+                      color: colorScheme.primary,
                     ),
                   ),
                 const SizedBox(height: 20),
                 
                 Text(
                   menuItem.name,
-                  style: const TextStyle(
-                    fontSize: 24,
+                  style: textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFD4A017),
+                    color: colorScheme.primary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -432,9 +446,8 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
                 Text(
                   menuItem.description,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
+                  style: textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurface.withOpacity(0.7),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -442,42 +455,30 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
                 Container(
                   height: 1,
                   width: double.infinity,
-                  color: const Color(0xFFD4A017).withOpacity(0.3),
+                  color: colorScheme.primary.withOpacity(0.3),
                 ),
                 const SizedBox(height: 20),
                 
                 Text(
                   'Harga: Rp ${_formatPrice(menuItem.price)}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Color(0xFFD4A017),
+                  style: textTheme.titleLarge?.copyWith(
+                    color: colorScheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 25),
                 
+                // The ElevatedButton will use theme automatically
                 ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD4A017),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 30,
-                      vertical: 15,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
                   onPressed: () {
                     controller.addToCart(menuItem);
-                    Navigator.pop(context); 
+                    Navigator.pop(dialogContext); 
                   },
                   icon: const Icon(Icons.add_shopping_cart),
-                  label: const Text(
+                  label: Text(
                     'Tambah ke Keranjang',
-                    style: TextStyle(
+                    style: textTheme.labelLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
                     ),
                   ),
                 ),

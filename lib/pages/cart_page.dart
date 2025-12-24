@@ -32,20 +32,26 @@ class _CartPageState extends State<CartPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Keranjang Belanja',
-          style: TextStyle(color: Color(0xFFD4A017)),
+          style: textTheme.titleLarge?.copyWith(color: colorScheme.primary),
         ),
-        backgroundColor: const Color(0xFF2D2D2D),
-        iconTheme: const IconThemeData(color: Color(0xFFD4A017)),
+        backgroundColor: colorScheme.surfaceContainerHighest,
+        iconTheme: IconThemeData(color: colorScheme.primary),
       ),
       
       body: Obx(() {
+        // Access observable directly for GetX to track
+        final items = controller.cartItems;
+        final total = items.fold(0, (sum, item) => sum + item.price);
         
-        if (cartItems.isEmpty) {
+        if (items.isEmpty) {
           return const CartEmptyView();
         }
         
@@ -54,9 +60,9 @@ class _CartPageState extends State<CartPage> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: cartItems.length, 
+                itemCount: items.length, 
                 itemBuilder: (context, index) {
-                  final item = cartItems[index];
+                  final item = items[index];
                   
                   return CartItemView(
                     item: item,
@@ -67,8 +73,8 @@ class _CartPageState extends State<CartPage> {
             ),
             
             CartTotalView(
-              itemCount: cartItems.length, 
-              totalPrice: totalPrice,
+              itemCount: items.length, 
+              totalPrice: total,
               onCheckout: _showCheckoutDialog,
             ),
           ],

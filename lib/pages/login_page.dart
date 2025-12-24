@@ -20,16 +20,14 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    
-    final goldColor = const Color(0xFFD4A017);
-    final darkBg = const Color(0xFF1A1A1A);
-    final cardBg = const Color(0xFF2D2D2D);
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: darkBg,
+      backgroundColor: colorScheme.surface,
       body: Stack(
         children: [
-          
+          // Decorative circle - top right
           Positioned(
             top: -100,
             right: -100,
@@ -37,11 +35,11 @@ class _LoginPageState extends State<LoginPage> {
               width: 300,
               height: 300,
               decoration: BoxDecoration(
-                color: goldColor.withOpacity(0.15),
+                color: colorScheme.primary.withOpacity(0.15),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: goldColor.withOpacity(0.2),
+                    color: colorScheme.primary.withOpacity(0.2),
                     blurRadius: 100,
                     spreadRadius: 50,
                   ),
@@ -49,6 +47,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
+          // Decorative circle - bottom left
           Positioned(
             bottom: -50,
             left: -50,
@@ -56,11 +55,11 @@ class _LoginPageState extends State<LoginPage> {
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: Colors.blueAccent.withOpacity(0.1),
+                color: colorScheme.secondary.withOpacity(0.1),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blueAccent.withOpacity(0.1),
+                    color: colorScheme.secondary.withOpacity(0.1),
                     blurRadius: 100,
                     spreadRadius: 20,
                   ),
@@ -69,49 +68,48 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          
+          // Main content
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  
+                  // Logo container
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: cardBg,
+                      color: colorScheme.surfaceContainerHighest,
                       boxShadow: [
                         BoxShadow(
-                          color: goldColor.withOpacity(0.4),
+                          color: colorScheme.primary.withOpacity(0.4),
                           blurRadius: 30,
                           spreadRadius: 5,
                         )
                       ],
-                      border: Border.all(color: goldColor.withOpacity(0.5), width: 2),
+                      border: Border.all(color: colorScheme.primary.withOpacity(0.5), width: 2),
                     ),
                     child: Icon(
                       Icons.fastfood_rounded, 
                       size: 60, 
-                      color: goldColor
+                      color: colorScheme.primary
                     ),
                   ),
                   const SizedBox(height: 20),
                   
-                  
+                  // Title with animation
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
                     child: Text(
                       isRegisterMode ? "Bergabunglah Bersama Kami" : "Warung Cakwi",
                       key: ValueKey(isRegisterMode),
-                      style: TextStyle(
-                        fontSize: 26,
+                      style: textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: colorScheme.onSurface,
                         letterSpacing: 1.2,
                         shadows: [
-                          Shadow(color: Colors.black45, offset: Offset(2,2), blurRadius: 4)
+                          Shadow(color: Colors.black45, offset: const Offset(2,2), blurRadius: 4)
                         ]
                       ),
                     ),
@@ -119,20 +117,22 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 8),
                   Text(
                     isRegisterMode ? "Buat akun untuk mulai memesan" : "Masuk untuk melanjutkan pesanan",
-                    style: const TextStyle(color: Colors.white54, fontSize: 14),
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.6),
+                    ),
                   ),
                   const SizedBox(height: 40),
 
-                  
+                  // Login/Register Form Card
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: cardBg.withOpacity(0.9),
+                      color: colorScheme.surfaceContainerHighest.withOpacity(0.9),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withOpacity(0.3),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -141,51 +141,51 @@ class _LoginPageState extends State<LoginPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        
+                        // Form title
                         Text(
                           isRegisterMode ? "REGISTER" : "LOGIN",
-                          style: TextStyle(
-                            color: goldColor, 
+                          style: textTheme.labelLarge?.copyWith(
+                            color: colorScheme.primary, 
                             fontWeight: FontWeight.bold, 
                             letterSpacing: 2
                           ),
                         ),
                         const SizedBox(height: 20),
 
-                        
+                        // Email field
                         _buildTextField(
+                          context: context,
                           controller: emailC,
                           label: "Email Address",
                           icon: Icons.email_outlined,
-                          goldColor: goldColor,
                         ),
                         const SizedBox(height: 20),
 
-                        
+                        // Password field
                         _buildTextField(
+                          context: context,
                           controller: passC,
                           label: "Password",
                           icon: Icons.lock_outline,
-                          goldColor: goldColor,
                           isPassword: true,
                         ),
                         const SizedBox(height: 30),
 
-                        
+                        // Submit button with gradient
                         SizedBox(
                           width: double.infinity,
                           height: 55,
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [goldColor, const Color(0xFFF4C430)],
+                                colors: [colorScheme.primary, colorScheme.primaryContainer],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: goldColor.withOpacity(0.4),
+                                  color: colorScheme.primary.withOpacity(0.4),
                                   blurRadius: 15,
                                   offset: const Offset(0, 5),
                                 ),
@@ -202,7 +202,7 @@ class _LoginPageState extends State<LoginPage> {
                               onPressed: () {
                                 if(emailC.text.isEmpty || passC.text.isEmpty){
                                   Get.snackbar("Ups!", "Mohon isi email dan password", 
-                                    backgroundColor: Colors.redAccent, colorText: Colors.white);
+                                    backgroundColor: colorScheme.error, colorText: colorScheme.onError);
                                   return;
                                 }
                                 if (isRegisterMode) {
@@ -214,10 +214,9 @@ class _LoginPageState extends State<LoginPage> {
                               },
                               child: Text(
                                 isRegisterMode ? "DAFTAR SEKARANG" : "MASUK APLIKASI",
-                                style: const TextStyle(
-                                  color: Colors.black87,
+                                style: textTheme.labelLarge?.copyWith(
+                                  color: colorScheme.onPrimary,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
                                   letterSpacing: 1,
                                 ),
                               ),
@@ -229,13 +228,15 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 30),
 
-                  
+                  // Toggle login/register
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         isRegisterMode ? "Sudah punya akun?" : "Belum punya akun?",
-                        style: const TextStyle(color: Colors.white60),
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface.withOpacity(0.6),
+                        ),
                       ),
                       TextButton(
                         onPressed: () {
@@ -247,8 +248,8 @@ class _LoginPageState extends State<LoginPage> {
                         },
                         child: Text(
                           isRegisterMode ? "Login Sekarang" : "Daftar Disini",
-                          style: TextStyle(
-                            color: goldColor,
+                          style: textTheme.labelLarge?.copyWith(
+                            color: colorScheme.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -256,13 +257,15 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                   ),
 
-                  
+                  // Guest login
                   TextButton.icon(
                     onPressed: () => Get.offAllNamed('/home'),
-                    icon: const Icon(Icons.offline_bolt, size: 16, color: Colors.grey),
-                    label: const Text(
+                    icon: Icon(Icons.offline_bolt, size: 16, color: colorScheme.onSurface.withOpacity(0.5)),
+                    label: Text(
                       "Lanjut tanpa Login (Tamu)",
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurface.withOpacity(0.5),
+                      ),
                     ),
                   ),
                 ],
@@ -276,36 +279,21 @@ class _LoginPageState extends State<LoginPage> {
 
   
   Widget _buildTextField({
+    required BuildContext context,
     required TextEditingController controller,
     required String label,
     required IconData icon,
-    required Color goldColor,
     bool isPassword = false,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: isPassword,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.white54),
-          prefixIcon: Icon(icon, color: goldColor.withOpacity(0.8)),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: goldColor),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.transparent),
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return TextField(
+      controller: controller,
+      obscureText: isPassword,
+      style: TextStyle(color: colorScheme.onSurface),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: colorScheme.primary.withOpacity(0.8)),
       ),
     );
   }
