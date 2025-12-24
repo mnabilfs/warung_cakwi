@@ -1,5 +1,19 @@
 import 'package:flutter/material.dart' hide MenuController;
+import 'package:flutter/material.dart' hide MenuController;
 import 'package:get/get.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+// import 'package:hive_flutter/hive_flutter.dart';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'firebase_options.dart';
+
+import 'data/providers/notification_provider.dart';
+import 'data/services/local_storage_service.dart';
+import 'data/services/notification_handler.dart';
+
+import 'pages/login_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 // import 'package:hive_flutter/hive_flutter.dart';
@@ -25,6 +39,34 @@ import 'theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await dotenv.load(fileName: ".env");
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // await Hive.initFlutter();
+  // Hive.registerAdapter(MenuItemAdapter());
+
+  FirebaseMessaging.onBackgroundMessage(
+    firebaseMessagingBackgroundHandler,
+  );
+
+  await Get.putAsync<LocalStorageService>(
+    () async => await LocalStorageService().init(),
+  );
+
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
+
+  Get.put(NotificationProvider());
+  Get.put(AuthController());
+  Get.put(ThemeController());
+  Get.put(MenuController());
+
+  final notificationHandler = NotificationHandler();
+  await notificationHandler.initLocalNotification();
+  await notificationHandler.initPushNotification();
   await dotenv.load(fileName: ".env");
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);

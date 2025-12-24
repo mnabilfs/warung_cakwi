@@ -1,22 +1,34 @@
 import 'package:flutter/material.dart';
 import '../../../../utils/price_formatter.dart';
 
+<<<<<<< HEAD
 // 🔍 MARKER: ERROR_PREVENTION_CHECKOUT_BUTTON
+=======
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
 class CartTotalView extends StatelessWidget {
   final int itemCount;
   final int totalPrice;
   final VoidCallback onCheckout;
+<<<<<<< HEAD
   final bool isProcessing; // ✅ TAMBAHKAN parameter ini
+=======
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
 
   const CartTotalView({
     super.key,
     required this.itemCount,
     required this.totalPrice,
     required this.onCheckout,
+<<<<<<< HEAD
     this.isProcessing = false, // ✅ Default false
   });
 
   bool get canCheckout => itemCount > 0 && !isProcessing; // ✅ Cek isProcessing
+=======
+  });
+
+  bool get canCheckout => itemCount > 0;
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
 
   @override
   Widget build(BuildContext context) {
@@ -78,18 +90,25 @@ class CartTotalView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
+<<<<<<< HEAD
           // ✅ ERROR PREVENTION: Checkout button dengan loading state
+=======
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
           ElevatedButton(
             onPressed: canCheckout ? onCheckout : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFD4A017),
               foregroundColor: Colors.black,
+<<<<<<< HEAD
               disabledBackgroundColor: Colors.grey,
+=======
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.symmetric(vertical: 15),
             ),
+<<<<<<< HEAD
             child: isProcessing
                 ? const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -117,9 +136,19 @@ class CartTotalView extends StatelessWidget {
                     'Checkout',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
+=======
+            child: const Text(
+              'Checkout',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
           ),
         ],
       ),
     );
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
