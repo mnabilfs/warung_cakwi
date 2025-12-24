@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../../data/models/menu_item.dart';
 import '../../../../utils/price_formatter.dart';
 
-<<<<<<< HEAD
-// 🔍 MARKER: AESTHETIC_MINIMALIST_CART_ITEM
-=======
->>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
 class CartItemView extends StatelessWidget {
   final MenuItem item;
   final VoidCallback onRemove;
@@ -18,11 +14,9 @@ class CartItemView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     
-    // ✅ AESTHETIC: Cleaner card design
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       color: colorScheme.surfaceContainerHighest,
@@ -37,11 +31,9 @@ class CartItemView extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         child: Row(
           children: [
-            // ✅ AESTHETIC: Smaller image
             _buildLeadingImage(colorScheme),
             const SizedBox(width: 12),
             
-            // ✅ AESTHETIC: Compact text
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +59,6 @@ class CartItemView extends StatelessWidget {
               ),
             ),
             
-            // ✅ AESTHETIC: Subtle delete button
             IconButton(
               icon: Icon(
                 Icons.remove_circle_outline,
@@ -78,51 +69,16 @@ class CartItemView extends StatelessWidget {
               tooltip: 'Hapus',
             ),
           ],
-=======
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: const Color(0xFF2D2D2D),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        // ✅ Tampilkan gambar dari network atau fallback ke icon
-        leading: _buildLeadingImage(),
-        title: Text(
-          item.name,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: Colors.white,
-          ),
-        ),
-        subtitle: Text(
-          'Rp ${PriceFormatter.format(item.price)}',
-          style: const TextStyle(
-            color: Color(0xFFD4A017),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete, color: Colors.red),
-          onPressed: onRemove,
->>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
         ),
       ),
     );
   }
 
-<<<<<<< HEAD
   Widget _buildLeadingImage(ColorScheme colorScheme) {
-=======
-  // ✅ Build leading image dengan network image support
-  Widget _buildLeadingImage() {
-    // Jika ada imageUrl, tampilkan gambar dari network
->>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
     if (item.imageUrl != null && item.imageUrl!.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: SizedBox(
-<<<<<<< HEAD
           width: 48,
           height: 48,
           child: Image.network(
@@ -132,57 +88,11 @@ class CartItemView extends StatelessWidget {
             cacheHeight: 96,
             errorBuilder: (context, error, stackTrace) {
               return _buildFallbackIcon(colorScheme);
-=======
-          width: 60,
-          height: 60,
-          child: Image.network(
-            item.imageUrl!,
-            fit: BoxFit.cover,
-            cacheWidth: 120,
-            cacheHeight: 120,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              
-              return Container(
-                color: const Color(0xFF3D3D3D),
-                child: Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
-                      strokeWidth: 2,
-                      color: const Color(0xFFD4A017),
-                    ),
-                  ),
-                ),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) {
-              // Fallback ke icon jika gambar gagal load
-              return Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3D3D3D),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  item.icon ?? Icons.fastfood,
-                  color: const Color(0xFFD4A017),
-                  size: 30,
-                ),
-              );
->>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
             },
           ),
         ),
       );
     }
-<<<<<<< HEAD
     return _buildFallbackIcon(colorScheme);
   }
 
@@ -202,18 +112,3 @@ class CartItemView extends StatelessWidget {
     );
   }
 }
-=======
-
-    // Fallback ke CircleAvatar dengan icon jika tidak ada imageUrl
-    return CircleAvatar(
-      radius: 30,
-      backgroundColor: const Color(0xFF3D3D3D),
-      child: Icon(
-        item.icon ?? Icons.fastfood,
-        color: const Color(0xFFD4A017),
-        size: 30,
-      ),
-    );
-  }
-}
->>>>>>> 0279b523e68f471dbc004169954a430aa50334b0

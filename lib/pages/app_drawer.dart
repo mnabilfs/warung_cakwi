@@ -4,16 +4,11 @@ import '../widgets/app/mengatur_item_menu_dalam_drawer/view/drawermenu_view.dart
 import '../widgets/app/mengatur_fungsi_buka_whatsapp/controller/whatsapp_controller.dart';
 import '../data/controllers/theme_controller.dart';
 import '../data/controllers/auth_controller.dart';
-// import '../pages/location_selection_page.dart';
 import '../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/view/location_view.dart';
-// import '../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/controller/location_controller.dart';
 import '../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/bindings/location_binding.dart';
 
 import '../pages/weather_recommendation_page.dart';
-<<<<<<< HEAD
-import '../pages/help_page.dart'; // ✅ HELP & DOCUMENTATION
-=======
->>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
+import '../pages/help_page.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -22,7 +17,6 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final whatsappController = Get.put(WhatsAppController());
     final themeController = Get.find<ThemeController>();
-<<<<<<< HEAD
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -31,10 +25,9 @@ class AppDrawer extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // ✅ 1. CUSTOM DRAWER HEADER DENGAN BADGE ROLE (PALING ATAS)
+          // 1. CUSTOM DRAWER HEADER DENGAN BADGE ROLE
           Obx(() {
             final authC = Get.find<AuthController>();
-            // Access observables directly for GetX to track
             final user = authC.currentUser.value;
             final profile = authC.currentProfile.value;
             final isLoggedIn = user != null;
@@ -75,7 +68,6 @@ class AppDrawer extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Tampilkan badge role
                       if (isLoggedIn)
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -101,7 +93,7 @@ class AppDrawer extends StatelessWidget {
             );
           }),
 
-          // ✅ 2. MENU BERANDA
+          // 2. MENU BERANDA
           DrawerMenuView(
             icon: Icons.home,
             iconColor: colorScheme.primary,
@@ -112,7 +104,7 @@ class AppDrawer extends StatelessWidget {
 
           Divider(color: colorScheme.outline.withOpacity(0.3)),
 
-          // ✅ 3. MENU LOKASI TOKO
+          // 3. MENU LOKASI TOKO
           DrawerMenuView(
             icon: Icons.location_on,
             iconColor: colorScheme.error,
@@ -121,145 +113,37 @@ class AppDrawer extends StatelessWidget {
             textColor: colorScheme.onSurface,
             onTap: () {
               Navigator.pop(context);
-
               Get.to(() => const LocationView(), binding: LocationBinding());
             },
           ),
-=======
 
-    return Obx(
-      () => Drawer(
-        backgroundColor: themeController.isDarkMode.value
-            ? const Color(0xFF2D2D2D)
-            : Colors.white,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            // ✅ 1. CUSTOM DRAWER HEADER DENGAN BADGE ROLE (PALING ATAS)
-            Obx(() {
-              final authC = Get.find<AuthController>();
-              return DrawerHeader(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    const Icon(
-                      Icons.restaurant,
-                      size: 50,
-                      color: Color(0xFFD4A017),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Bakso Ojolali Cakwi',
-                      style: TextStyle(
-                        color: Color(0xFFD4A017),
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        const Text(
-                          'Makanan Enak, Harga Terjangkau',
-                          style: TextStyle(color: Colors.white70, fontSize: 12),
-                        ),
-                        const SizedBox(width: 8),
-                        // Tampilkan badge role
-                        if (authC.isLoggedIn)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: authC.isAdmin ? Colors.red : Colors.blue,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              authC.userRole.toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            }),
+          // 4. MENU HUBUNGI KAMI
+          DrawerMenuView(
+            icon: Icons.chat,
+            iconColor: const Color(0xFF8FBC8F),
+            title: 'Hubungi Kami',
+            subtitle: 'WhatsApp: +62 823-3757-7433',
+            textColor: colorScheme.onSurface,
+            onTap: () {
+              Navigator.pop(context);
+              whatsappController.openWhatsApp(context);
+            },
+          ),
 
-            // ✅ 2. MENU BERANDA
-            DrawerMenuView(
-              icon: Icons.home,
-              iconColor: const Color(0xFFD4A017),
-              title: 'Beranda',
-              textColor: themeController.isDarkMode.value
-                  ? Colors.white
-                  : Colors.black87,
-              onTap: () => Navigator.pop(context),
-            ),
+          // 3.5. MENU REKOMENDASI CUACA & MENU
+          DrawerMenuView(
+            icon: Icons.wb_sunny,
+            iconColor: Colors.orange,
+            title: 'Rekomendasi AI',
+            subtitle: 'Cuaca & menu hari ini',
+            textColor: colorScheme.onSurface,
+            onTap: () {
+              Navigator.pop(context);
+              Get.to(() => const WeatherRecommendationPage());
+            },
+          ),
 
-            const Divider(color: Colors.white24),
-
-            // ✅ 3. MENU LOKASI TOKO
-            DrawerMenuView(
-              icon: Icons.location_on,
-              iconColor: Colors.red,
-              title: 'Lokasi Toko',
-              subtitle: 'Lihat lokasi warung kami',
-              textColor: themeController.isDarkMode.value
-                  ? Colors.white
-                  : Colors.black87,
-              onTap: () {
-                Navigator.pop(context);
-
-                Get.to(() => const LocationView(), binding: LocationBinding());
-              },
-            ),
->>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
-
-            // ✅ 4. MENU HUBUNGI KAMI
-            DrawerMenuView(
-              icon: Icons.chat,
-              iconColor: const Color(0xFF8FBC8F),
-              title: 'Hubungi Kami',
-              subtitle: 'WhatsApp: +62 823-3757-7433',
-              textColor: themeController.isDarkMode.value
-                  ? Colors.white
-                  : Colors.black87,
-              onTap: () {
-                Navigator.pop(context);
-                whatsappController.openWhatsApp(context);
-              },
-            ),
-
-            // ✅ 3.5. MENU REKOMENDASI CUACA & MENU
-DrawerMenuView(
-  icon: Icons.wb_sunny,
-  iconColor: Colors.orange,
-  title: 'Rekomendasi AI',
-  subtitle: 'Cuaca & menu hari ini',
-  textColor: themeController.isDarkMode.value
-      ? Colors.white
-      : Colors.black87,
-  onTap: () {
-    Navigator.pop(context);
-    Get.to(() => const WeatherRecommendationPage());
-  },
-),
-
-<<<<<<< HEAD
-          // ✅ 5. MENU JAM OPERASIONAL
+          // 5. MENU JAM OPERASIONAL
           DrawerMenuView(
             icon: Icons.access_time,
             iconColor: Colors.blue,
@@ -269,7 +153,7 @@ DrawerMenuView(
             onTap: () => Navigator.pop(context),
           ),
 
-          // ✅ 6. MENU BANTUAN (HELP & DOCUMENTATION)
+          // 6. MENU BANTUAN (HELP & DOCUMENTATION)
           DrawerMenuView(
             icon: Icons.help_outline,
             iconColor: Colors.teal,
@@ -284,7 +168,7 @@ DrawerMenuView(
 
           Divider(color: colorScheme.outline.withOpacity(0.5)),
 
-          // ✅ 6. TOGGLE THEME (PALING BAWAH)
+          // 7. TOGGLE THEME
           Obx(
             () => DrawerMenuView(
               icon: themeController.isDarkMode.value
@@ -304,45 +188,6 @@ DrawerMenuView(
             ),
           ),
         ],
-=======
-            // ✅ 5. MENU JAM OPERASIONAL
-            DrawerMenuView(
-              icon: Icons.access_time,
-              iconColor: Colors.blue,
-              title: 'Jam Operasional',
-              subtitle: 'Setiap Hari: 08.00 - 21.00',
-              textColor: themeController.isDarkMode.value
-                  ? Colors.white
-                  : Colors.black87,
-              onTap: () => Navigator.pop(context),
-            ),
-
-            const Divider(color: Colors.white54),
-
-            // ✅ 6. TOGGLE THEME (PALING BAWAH)
-            Obx(
-              () => DrawerMenuView(
-                icon: themeController.isDarkMode.value
-                    ? Icons.wb_sunny
-                    : Icons.nights_stay,
-                iconColor: themeController.isDarkMode.value
-                    ? Colors.yellow
-                    : Colors.indigo,
-                title: themeController.isDarkMode.value
-                    ? 'Mode Terang'
-                    : 'Mode Gelap',
-                subtitle: 'Simpan preferensi tema aplikasi',
-                textColor: themeController.isDarkMode.value
-                    ? Colors.white
-                    : Colors.black87,
-                onTap: () {
-                  themeController.toggleTheme();
-                },
-              ),
-            ),
-          ],
-        ),
->>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
       ),
     );
   }
