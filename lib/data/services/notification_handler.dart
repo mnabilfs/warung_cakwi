@@ -27,6 +27,8 @@ class NotificationHandler {
     'High Importance Notification',
     description: 'Used For Notification',
     importance: Importance.defaultImportance,
+    playSound: true,
+    sound: RawResourceAndroidNotificationSound('order'),
   );
 
   Future<void> initPushNotification() async {
@@ -44,7 +46,6 @@ class NotificationHandler {
       firebaseMessagingBackgroundHandler,
     );
 
-    // ✅ Subscribe to menu_updates topic to receive admin notifications
     await _firebaseMessaging.subscribeToTopic('menu_updates');
     print('📢 Subscribed to menu_updates topic');
 
@@ -62,7 +63,6 @@ class NotificationHandler {
       final notification = message.notification;
       if (notification == null) return;
 
-      // ✅ Show popup dialog for foreground notifications
       _showNotificationPopup(
         title: notification.title ?? 'Notifikasi',
         body: notification.body ?? '',
@@ -137,7 +137,7 @@ class NotificationHandler {
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
-        sound: 'ordew.mp3',
+        sound: 'order.mp3',
       ),
     );
 
@@ -151,7 +151,6 @@ class NotificationHandler {
     _logNotification(title, body, 'local');
   }
 
-  /// ✅ Show popup dialog when notification received in foreground
   void _showNotificationPopup({
     required String title,
     required String body,
@@ -201,7 +200,11 @@ class NotificationHandler {
         ),
         actions: [
           TextButton(
-            onPressed: () => Get.back(),
+            onPressed: () {
+              if (Get.context != null) {
+                Navigator.of(Get.context!).pop();
+              }
+            },
             child: const Text(
               'Tutup',
               style: TextStyle(color: Colors.white70),
@@ -214,7 +217,11 @@ class NotificationHandler {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            onPressed: () => Get.back(),
+            onPressed: () {
+              if (Get.context != null) {
+                Navigator.of(Get.context!).pop();
+              }
+            },
             child: const Text(
               'OK',
               style: TextStyle(color: Colors.black),
