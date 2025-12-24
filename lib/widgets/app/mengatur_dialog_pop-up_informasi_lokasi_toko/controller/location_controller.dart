@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:gerai_bakso/data/helpers/navigation_helper.dart';
 import 'package:get/get.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -20,6 +22,8 @@ class LocationController extends GetxController {
   final Rx<LocationPermission> _permissionStatus =
       LocationPermission.denied.obs;
   final RxBool _isGpsEnabled = false.obs; // GPS toggle, default: off
+  final RxList<LatLng> routePoints = <LatLng>[].obs;
+  final RxBool isFetchingRoute = false.obs;
 
   // FlutterMap Controller
   MapController? _mapController;
@@ -199,6 +203,7 @@ class LocationController extends GetxController {
       if (position != null) {
         _currentPosition.value = position;
         _updateMapPosition(position);
+        await fetchRoute();
         _errorMessage.value = '';
       } else {
         _errorMessage.value = 'Tidak dapat mendapatkan posisi saat ini.';
@@ -257,6 +262,7 @@ class LocationController extends GetxController {
           (Position position) {
             _currentPosition.value = position;
             _updateMapPosition(position);
+            fetchRoute();
           },
           onError: (error) {
             _errorMessage.value = 'Error tracking: ${error.toString()}';
@@ -275,6 +281,35 @@ class LocationController extends GetxController {
       if (kDebugMode) {
         print('Start tracking error: $e');
       }
+    }
+  }
+
+  Future<void> fetchRoute() async {
+    if (_currentPosition.value == null) return;
+    if (isFetchingRoute.value) return; // 🔥 guard
+    if (routePoints.isNotEmpty) return;
+
+    try {
+      isFetchingRoute.value = true;
+
+      final points = await NavigationHelper.generateRouteByRoad(
+        _currentPosition.value!,
+        profile: _isGpsEnabled.value ? 'driving' : 'walking',
+      );
+
+      routePoints.assignAll(points);
+      if (points.isNotEmpty) {
+        final bounds = LatLngBounds.fromPoints(points);
+        mapController.fitCamera(
+          CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(40)),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetch route: $e');
+      }
+    } finally {
+      isFetchingRoute.value = false;
     }
   }
 

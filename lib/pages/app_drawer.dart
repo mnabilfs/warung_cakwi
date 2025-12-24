@@ -4,7 +4,10 @@ import '../widgets/app/mengatur_item_menu_dalam_drawer/view/drawermenu_view.dart
 import '../widgets/app/mengatur_fungsi_buka_whatsapp/controller/whatsapp_controller.dart';
 import '../data/controllers/theme_controller.dart';
 import '../data/controllers/auth_controller.dart';
-import '../pages/location_selection_page.dart';
+// import '../pages/location_selection_page.dart';
+import '../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/view/location_view.dart';
+// import '../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/controller/location_controller.dart';
+import '../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/bindings/location_binding.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -109,7 +112,8 @@ class AppDrawer extends StatelessWidget {
                   : Colors.black87,
               onTap: () {
                 Navigator.pop(context);
-                Get.to(() => const LocationSelectionPage());
+
+                Get.to(() => const LocationView(), binding: LocationBinding());
               },
             ),
 
@@ -143,24 +147,26 @@ class AppDrawer extends StatelessWidget {
             const Divider(color: Colors.white54),
 
             // ✅ 6. TOGGLE THEME (PALING BAWAH)
-            Obx(() => DrawerMenuView(
-                  icon: themeController.isDarkMode.value
-                      ? Icons.wb_sunny
-                      : Icons.nights_stay,
-                  iconColor: themeController.isDarkMode.value
-                      ? Colors.yellow
-                      : Colors.indigo,
-                  title: themeController.isDarkMode.value
-                      ? 'Mode Terang'
-                      : 'Mode Gelap',
-                  subtitle: 'Simpan preferensi tema aplikasi',
-                  textColor: themeController.isDarkMode.value
-                      ? Colors.white
-                      : Colors.black87,
-                  onTap: () {
-                    themeController.toggleTheme();
-                  },
-                )),
+            Obx(
+              () => DrawerMenuView(
+                icon: themeController.isDarkMode.value
+                    ? Icons.wb_sunny
+                    : Icons.nights_stay,
+                iconColor: themeController.isDarkMode.value
+                    ? Colors.yellow
+                    : Colors.indigo,
+                title: themeController.isDarkMode.value
+                    ? 'Mode Terang'
+                    : 'Mode Gelap',
+                subtitle: 'Simpan preferensi tema aplikasi',
+                textColor: themeController.isDarkMode.value
+                    ? Colors.white
+                    : Colors.black87,
+                onTap: () {
+                  themeController.toggleTheme();
+                },
+              ),
+            ),
           ],
         ),
       ),
