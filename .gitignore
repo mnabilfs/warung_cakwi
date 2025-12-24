@@ -13,6 +13,9 @@
 migrate_working_dir/
 .env
 
+# Firebase Service Account (NEVER COMMIT!)
+assets/firebase-service-account.json
+
 # IntelliJ related
 *.iml
 *.ipr
