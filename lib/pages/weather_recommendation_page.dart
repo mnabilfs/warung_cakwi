@@ -8,16 +8,18 @@ class WeatherRecommendationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(WeatherRecommendationController());
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Rekomendasi AI',
-          style: TextStyle(color: Color(0xFFD4A017)),
+          style: TextStyle(color: colorScheme.primary),
         ),
-        backgroundColor: const Color(0xFF2D2D2D),
-        iconTheme: const IconThemeData(color: Color(0xFFD4A017)),
+        backgroundColor: colorScheme.surfaceContainerHighest,
+        iconTheme: IconThemeData(color: colorScheme.primary),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -28,15 +30,17 @@ class WeatherRecommendationPage extends StatelessWidget {
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircularProgressIndicator(color: Color(0xFFD4A017)),
-                SizedBox(height: 16),
+                CircularProgressIndicator(color: colorScheme.primary),
+                const SizedBox(height: 16),
                 Text(
                   'Menganalisis cuaca & menu...',
-                  style: TextStyle(color: Colors.white70),
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface.withOpacity(0.7),
+                  ),
                 ),
               ],
             ),
@@ -50,13 +54,18 @@ class WeatherRecommendationPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline,
-                      size: 64, color: Colors.red),
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: colorScheme.error,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     controller.errorMessage.value,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    style: textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
@@ -64,8 +73,8 @@ class WeatherRecommendationPage extends StatelessWidget {
                     icon: const Icon(Icons.refresh),
                     label: const Text('Coba Lagi'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD4A017),
-                      foregroundColor: Colors.black,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                     ),
                   ),
                 ],
@@ -76,7 +85,7 @@ class WeatherRecommendationPage extends StatelessWidget {
 
         return RefreshIndicator(
           onRefresh: controller.generateRecommendation,
-          color: const Color(0xFFD4A017),
+          color: colorScheme.primary,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
@@ -84,17 +93,17 @@ class WeatherRecommendationPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Weather Card
-                _buildWeatherCard(controller),
+                _buildWeatherCard(controller, colorScheme, textTheme),
 
                 const SizedBox(height: 16),
 
                 // AI Recommendation Card
-                _buildRecommendationCard(controller),
+                _buildRecommendationCard(controller, colorScheme, textTheme),
 
                 const SizedBox(height: 16),
 
                 // Info Card
-                _buildInfoCard(),
+                _buildInfoCard(colorScheme, textTheme),
               ],
             ),
           ),
@@ -103,7 +112,11 @@ class WeatherRecommendationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildWeatherCard(WeatherRecommendationController controller) {
+  Widget _buildWeatherCard(
+    WeatherRecommendationController controller,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
     final weather = controller.currentWeather.value;
     if (weather == null) return const SizedBox.shrink();
 
@@ -112,14 +125,17 @@ class WeatherRecommendationPage extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue.shade600, Colors.blue.shade400],
+          colors: [
+            colorScheme.primaryContainer,
+            colorScheme.primaryContainer.withOpacity(0.7),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
+            color: colorScheme.shadow.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -134,17 +150,15 @@ class WeatherRecommendationPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '${weather['temperature'].toStringAsFixed(1)}°C',
-            style: const TextStyle(
-              fontSize: 48,
+            style: textTheme.displayLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: colorScheme.onPrimaryContainer,
             ),
           ),
           Text(
             weather['description'],
-            style: const TextStyle(
-              fontSize: 18,
-              color: Colors.white,
+            style: textTheme.titleMedium?.copyWith(
+              color: colorScheme.onPrimaryContainer,
             ),
           ),
           const SizedBox(height: 16),
@@ -152,10 +166,23 @@ class WeatherRecommendationPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildWeatherDetail(
-                  '💨', '${weather['wind_speed'].toStringAsFixed(1)} m/s'),
-              _buildWeatherDetail('💧', '${weather['humidity']}%'),
+                '💨',
+                '${weather['wind_speed'].toStringAsFixed(1)} m/s',
+                colorScheme,
+                textTheme,
+              ),
               _buildWeatherDetail(
-                  '🌡️', 'Terasa ${weather['feels_like'].toStringAsFixed(1)}°C'),
+                '💧',
+                '${weather['humidity']}%',
+                colorScheme,
+                textTheme,
+              ),
+              _buildWeatherDetail(
+                '🌡️',
+                'Terasa ${weather['feels_like'].toStringAsFixed(1)}°C',
+                colorScheme,
+                textTheme,
+              ),
             ],
           ),
         ],
@@ -163,28 +190,39 @@ class WeatherRecommendationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildWeatherDetail(String icon, String value) {
+  Widget _buildWeatherDetail(
+    String icon,
+    String value,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
     return Column(
       children: [
         Text(icon, style: const TextStyle(fontSize: 24)),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(color: Colors.white, fontSize: 12),
+          style: textTheme.bodySmall?.copyWith(
+            color: colorScheme.onPrimaryContainer,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildRecommendationCard(WeatherRecommendationController controller) {
+  Widget _buildRecommendationCard(
+    WeatherRecommendationController controller,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2D2D),
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFD4A017).withOpacity(0.3),
+          color: colorScheme.outline.withOpacity(0.3),
           width: 2,
         ),
       ),
@@ -196,22 +234,21 @@ class WeatherRecommendationPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD4A017).withOpacity(0.2),
+                  color: colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.stars,
-                  color: Color(0xFFD4A017),
+                  color: colorScheme.primary,
                   size: 24,
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Rekomendasi AI',
-                style: TextStyle(
-                  fontSize: 20,
+                style: textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFD4A017),
+                  color: colorScheme.primary,
                 ),
               ),
             ],
@@ -219,9 +256,8 @@ class WeatherRecommendationPage extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             controller.recommendation.value,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.white,
+            style: textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurface,
               height: 1.6,
             ),
           ),
@@ -230,25 +266,30 @@ class WeatherRecommendationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(ColorScheme colorScheme, TextTheme textTheme) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2D2D).withOpacity(0.5),
+        color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white24),
+        border: Border.all(
+          color: colorScheme.outline.withOpacity(0.2),
+        ),
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline, color: Colors.white54, size: 20),
+          Icon(
+            Icons.info_outline,
+            color: colorScheme.onSurface.withOpacity(0.6),
+            size: 20,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'Rekomendasi berdasarkan cuaca dalam radius 5KM dari Warung Cakwi',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.white.withOpacity(0.7),
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withOpacity(0.7),
               ),
             ),
           ),

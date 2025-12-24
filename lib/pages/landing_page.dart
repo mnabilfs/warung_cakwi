@@ -15,6 +15,7 @@ import 'admin_dashboard_page.dart';
 
 import '../widgets/home/ai_recommendation_banner.dart';
 import '../utils/error_helper.dart';
+import '../data/controllers/weather_recommendation_controller.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -31,6 +32,21 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    
+    // Force initial fetch
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Trigger menu fetch
+      controller.fetchMenuItems();
+      
+      // Force weather controller to start if exists
+      // Periksa apakah WeatherRecommendationController terdaftar
+      if (Get.isRegistered<WeatherRecommendationController>()) {
+        final weatherController = Get.find<WeatherRecommendationController>();
+        if (!weatherController.isAutoRefreshing.value) {
+          weatherController.startAutoRefresh();
+        }
+      }
+    });
   }
 
   @override
@@ -221,6 +237,7 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
                   ),
                 )
               else
+                // Panggil _buildMenuSection yang benar
                 _buildMenuSection(context, items),
             ],
           ),
@@ -238,6 +255,7 @@ class _LandingPageState extends State<LandingPage> with WidgetsBindingObserver {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // AI Banner - SELALU TAMPILKAN
             const AIRecommendationBanner(),
             
             _buildSectionHeader(context),

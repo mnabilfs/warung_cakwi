@@ -20,32 +20,37 @@ class AdminDashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Admin Dashboard',
-          style: TextStyle(color: Color(0xFFD4A017)),
+          style: TextStyle(color: colorScheme.primary),
         ),
-        backgroundColor: const Color(0xFF2D2D2D),
-        iconTheme: const IconThemeData(color: Color(0xFFD4A017)),
+        backgroundColor: colorScheme.surfaceContainerHighest,
+        iconTheme: IconThemeData(color: colorScheme.primary),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh, color: colorScheme.primary),
             onPressed: () => adminC.fetchMenuItems(),
           ),
         ],
       ),
       body: Obx(() {
         if (adminC.isLoading.value && adminC.menuItems.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(color: colorScheme.primary),
+          );
         }
 
         if (adminC.errorMessage.isNotEmpty && adminC.menuItems.isEmpty) {
           return Center(
             child: Text(
               'Error: ${adminC.errorMessage}',
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: colorScheme.onSurface),
             ),
           );
         }
@@ -57,7 +62,7 @@ class AdminDashboardPage extends StatelessWidget {
             final item = adminC.menuItems[index];
 
             return Card(
-              color: const Color(0xFF2D2D2D),
+              color: colorScheme.surfaceContainerHighest,
               margin: const EdgeInsets.only(bottom: 12),
               child: ListTile(
                 leading: item.imageUrl != null && item.imageUrl!.isNotEmpty
@@ -73,42 +78,42 @@ class AdminDashboardPage extends StatelessWidget {
                               width: 60,
                               height: 60,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF3D3D3D),
+                                color: colorScheme.surfaceContainerLow,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.fastfood,
-                                color: Color(0xFFD4A017),
+                                color: colorScheme.primary,
                               ),
                             );
                           },
                         ),
                       )
-                    : const CircleAvatar(
-                        backgroundColor: Color(0xFF3D3D3D),
-                        child: Icon(Icons.fastfood, color: Color(0xFFD4A017)),
+                    : CircleAvatar(
+                        backgroundColor: colorScheme.surfaceContainerLow,
+                        child: Icon(Icons.fastfood, color: colorScheme.primary),
                       ),
                 title: Text(
                   item.name,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 subtitle: Text(
                   'Rp ${PriceFormatter.format(item.price)}',
-                  style: const TextStyle(color: Color(0xFFD4A017)),
+                  style: TextStyle(color: colorScheme.primary),
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
-                      onPressed: () => _showEditDialog(item),
+                      icon: Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () => _showEditDialog(context, item),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _confirmDelete(item.id!, item.imageUrl, item.name),
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _confirmDelete(context, item.id!, item.imageUrl, item.name),
                     ),
                   ],
                 ),
@@ -118,14 +123,17 @@ class AdminDashboardPage extends StatelessWidget {
         );
       }),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFFD4A017),
-        onPressed: _showAddDialog,
-        child: const Icon(Icons.add, color: Colors.black),
+        backgroundColor: colorScheme.primary,
+        onPressed: () => _showAddDialog(context),
+        child: Icon(Icons.add, color: colorScheme.onPrimary),
       ),
     );
   }
 
-  void _showAddDialog() {
+  void _showAddDialog(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    
     final nameC = TextEditingController();
     final descC = TextEditingController();
     final priceC = TextEditingController();
@@ -134,10 +142,10 @@ class AdminDashboardPage extends StatelessWidget {
 
     Get.dialog(
       AlertDialog(
-        backgroundColor: const Color(0xFF2D2D2D),
-        title: const Text(
+        backgroundColor: colorScheme.surfaceContainerHighest,
+        title: Text(
           'Tambah Menu',
-          style: TextStyle(color: Color(0xFFD4A017)),
+          style: TextStyle(color: colorScheme.primary),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -145,45 +153,54 @@ class AdminDashboardPage extends StatelessWidget {
             children: [
               TextField(
                 controller: nameC,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
+                style: TextStyle(color: colorScheme.onSurface),
+                decoration: InputDecoration(
                   labelText: 'Nama Menu',
-                  labelStyle: TextStyle(color: Colors.white70),
+                  labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                   enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white30),
+                    borderSide: BorderSide(color: colorScheme.outline),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.primary),
                   ),
                 ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: descC,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
+                style: TextStyle(color: colorScheme.onSurface),
+                decoration: InputDecoration(
                   labelText: 'Deskripsi',
-                  labelStyle: TextStyle(color: Colors.white70),
+                  labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                   enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white30),
+                    borderSide: BorderSide(color: colorScheme.outline),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.primary),
                   ),
                 ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: priceC,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: colorScheme.onSurface),
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Harga',
-                  labelStyle: TextStyle(color: Colors.white70),
+                  labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                   enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white30),
+                    borderSide: BorderSide(color: colorScheme.outline),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.primary),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
 
-              const Text(
+              Text(
                 'Foto Menu (Opsional)',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+                style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
               ),
               const SizedBox(height: 8),
 
@@ -208,9 +225,9 @@ class AdminDashboardPage extends StatelessWidget {
                           top: 8,
                           right: 8,
                           child: IconButton(
-                            icon: const Icon(Icons.close, color: Colors.red),
+                            icon: Icon(Icons.close, color: Colors.red),
                             style: IconButton.styleFrom(
-                              backgroundColor: Colors.white,
+                              backgroundColor: colorScheme.surface,
                             ),
                             onPressed: () => adminC.clearSelectedImage(),
                           ),
@@ -222,19 +239,19 @@ class AdminDashboardPage extends StatelessWidget {
                 return Container(
                   height: 150,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF3D3D3D),
+                    color: colorScheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white30),
+                    border: Border.all(color: colorScheme.outline),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.image, size: 50, color: Colors.white30),
-                        SizedBox(height: 8),
+                        Icon(Icons.image, size: 50, color: colorScheme.outline),
+                        const SizedBox(height: 8),
                         Text(
                           'Tidak ada gambar',
-                          style: TextStyle(color: Colors.white30),
+                          style: TextStyle(color: colorScheme.outline),
                         ),
                       ],
                     ),
@@ -249,16 +266,16 @@ class AdminDashboardPage extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => adminC.pickImageFromGallery(),
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.photo_library,
-                        color: Color(0xFFD4A017),
+                        color: colorScheme.primary,
                       ),
-                      label: const Text(
+                      label: Text(
                         'Galeri',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: colorScheme.onSurface),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFD4A017)),
+                        side: BorderSide(color: colorScheme.primary),
                       ),
                     ),
                   ),
@@ -266,16 +283,16 @@ class AdminDashboardPage extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => adminC.pickImageFromCamera(),
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.camera_alt,
-                        color: Color(0xFFD4A017),
+                        color: colorScheme.primary,
                       ),
-                      label: const Text(
+                      label: Text(
                         'Kamera',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: colorScheme.onSurface),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFD4A017)),
+                        side: BorderSide(color: colorScheme.primary),
                       ),
                     ),
                   ),
@@ -290,15 +307,20 @@ class AdminDashboardPage extends StatelessWidget {
               adminC.clearSelectedImage();
               _closeDialog();
             },
-            child: const Text('Batal', style: TextStyle(color: Colors.white70)),
+            child: Text('Batal', style: TextStyle(color: colorScheme.onSurfaceVariant)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFD4A017),
+              backgroundColor: colorScheme.primary,
             ),
             onPressed: () async {
               if (nameC.text.isEmpty || priceC.text.isEmpty) {
-                Get.snackbar('Error', 'Nama dan harga wajib diisi');
+                Get.snackbar(
+                  'Error',
+                  'Nama dan harga wajib diisi',
+                  backgroundColor: colorScheme.error,
+                  colorText: colorScheme.onError,
+                );
                 return;
               }
 
@@ -311,350 +333,376 @@ class AdminDashboardPage extends StatelessWidget {
 
               if (success) _closeDialog();
             },
-            child: const Text('Simpan', style: TextStyle(color: Colors.black)),
+            child: Text('Simpan', style: TextStyle(color: colorScheme.onPrimary)),
           ),
         ],
       ),
     );
   }
 
-void _showEditDialog(item) {
-  final nameC = TextEditingController(text: item.name);
-  final descC = TextEditingController(text: item.description);
-  final priceC = TextEditingController(text: item.price.toString());
+  void _showEditDialog(BuildContext context, item) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    
+    final nameC = TextEditingController(text: item.name);
+    final descC = TextEditingController(text: item.description);
+    final priceC = TextEditingController(text: item.price.toString());
 
-  // Reset selected image
-  adminC.clearSelectedImage();
+    // Reset selected image
+    adminC.clearSelectedImage();
 
-  Get.dialog(
-    AlertDialog(
-      backgroundColor: const Color(0xFF2D2D2D),
-      title: const Text(
-        'Edit Menu',
-        style: TextStyle(color: Color(0xFFD4A017)),
-      ),
-      content: ConstrainedBox(
-        // ✅ Beri constraint jelas untuk content
-        constraints: BoxConstraints(
-          maxWidth: 400,
-          maxHeight: MediaQuery.of(Get.context!).size.height * 0.7,
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: colorScheme.surfaceContainerHighest,
+        title: Text(
+          'Edit Menu',
+          style: TextStyle(color: colorScheme.primary),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: nameC,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Nama Menu',
-                  labelStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white30),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: descC,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Deskripsi',
-                  labelStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white30),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: priceC,
-                style: const TextStyle(color: Colors.white),
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Harga',
-                  labelStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white30),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Image Picker Section
-              const Text(
-                'Foto Menu',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-              const SizedBox(height: 8),
-
-              // ✅ Image Preview dengan constraint yang jelas
-              Obx(() {
-                // Tampilkan gambar baru yang dipilih
-                if (adminC.selectedImagePath.value != null) {
-                  return _buildImagePreview(
-                    child: Image.file(
-                      File(adminC.selectedImagePath.value!),
-                      fit: BoxFit.cover,
+        content: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 400,
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: nameC,
+                  style: TextStyle(color: colorScheme.onSurface),
+                  decoration: InputDecoration(
+                    labelText: 'Nama Menu',
+                    labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: colorScheme.outline),
                     ),
-                    onRemove: () => adminC.clearSelectedImage(),
-                  );
-                }
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: colorScheme.primary),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: descC,
+                  style: TextStyle(color: colorScheme.onSurface),
+                  decoration: InputDecoration(
+                    labelText: 'Deskripsi',
+                    labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: colorScheme.outline),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: colorScheme.primary),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: priceC,
+                  style: TextStyle(color: colorScheme.onSurface),
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Harga',
+                    labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: colorScheme.outline),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: colorScheme.primary),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
 
-                // Tampilkan gambar existing jika ada
-                if (item.imageUrl != null && item.imageUrl!.isNotEmpty) {
-                  return _buildNetworkImagePreview(item.imageUrl!);
-                }
+                // Image Picker Section
+                Text(
+                  'Foto Menu',
+                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
+                ),
+                const SizedBox(height: 8),
 
-                // Placeholder jika tidak ada gambar
-                return _buildPlaceholder();
-              }),
-
-              const SizedBox(height: 12),
-
-              // Tombol Pilih Gambar
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => adminC.pickImageFromGallery(),
-                      icon: const Icon(
-                        Icons.photo_library,
-                        color: Color(0xFFD4A017),
-                        size: 20,
+                // ✅ Image Preview dengan constraint yang jelas
+                Obx(() {
+                  // Tampilkan gambar baru yang dipilih
+                  if (adminC.selectedImagePath.value != null) {
+                    return _buildImagePreview(
+                      context: context,
+                      child: Image.file(
+                        File(adminC.selectedImagePath.value!),
+                        fit: BoxFit.cover,
                       ),
-                      label: const Text(
-                        'Galeri',
-                        style: TextStyle(color: Colors.white, fontSize: 13),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFD4A017)),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
+                      onRemove: () => adminC.clearSelectedImage(),
+                    );
+                  }
+
+                  // Tampilkan gambar existing jika ada
+                  if (item.imageUrl != null && item.imageUrl!.isNotEmpty) {
+                    return _buildNetworkImagePreview(context, item.imageUrl!);
+                  }
+
+                  // Placeholder jika tidak ada gambar
+                  return _buildPlaceholder(context);
+                }),
+
+                const SizedBox(height: 12),
+
+                // Tombol Pilih Gambar
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => adminC.pickImageFromGallery(),
+                        icon: Icon(
+                          Icons.photo_library,
+                          color: colorScheme.primary,
+                          size: 20,
+                        ),
+                        label: Text(
+                          'Galeri',
+                          style: TextStyle(color: colorScheme.onSurface, fontSize: 13),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: colorScheme.primary),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => adminC.pickImageFromCamera(),
-                      icon: const Icon(
-                        Icons.camera_alt,
-                        color: Color(0xFFD4A017),
-                        size: 20,
-                      ),
-                      label: const Text(
-                        'Kamera',
-                        style: TextStyle(color: Colors.white, fontSize: 13),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFD4A017)),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => adminC.pickImageFromCamera(),
+                        icon: Icon(
+                          Icons.camera_alt,
+                          color: colorScheme.primary,
+                          size: 20,
+                        ),
+                        label: Text(
+                          'Kamera',
+                          style: TextStyle(color: colorScheme.onSurface, fontSize: 13),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: colorScheme.primary),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            adminC.clearSelectedImage();
-            _closeDialog();
-          },
-          child: const Text('Batal', style: TextStyle(color: Colors.white70)),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFD4A017),
-          ),
-          onPressed: () async {
-            if (nameC.text.isEmpty || priceC.text.isEmpty) {
-              Get.snackbar('Error', 'Nama dan harga wajib diisi');
-              return;
-            }
-
-            final success = await adminC.updateMenuItem(
-              id: item.id!,
-              name: nameC.text,
-              description: descC.text,
-              price: int.parse(priceC.text),
-              imageFile: adminC.selectedImageFile.value,
-              existingImageUrl: item.imageUrl,
-            );
-
-            if (success) _closeDialog();
-          },
-          child: const Text('Update', style: TextStyle(color: Colors.black)),
-        ),
-      ],
-    ),
-  );
-}
-
-// ✅ Helper widget untuk image preview dengan constraint jelas
-Widget _buildImagePreview({
-  required Widget child,
-  required VoidCallback onRemove,
-}) {
-  return SizedBox(
-    width: double.infinity,
-    height: 150,
-    child: Stack(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: SizedBox(
-            width: double.infinity,
-            height: 150,
-            child: child,
-          ),
-        ),
-        Positioned(
-          top: 8,
-          right: 8,
-          child: Material(
-            color: Colors.white,
-            shape: const CircleBorder(),
-            child: InkWell(
-              onTap: onRemove,
-              customBorder: const CircleBorder(),
-              child: const Padding(
-                padding: EdgeInsets.all(8),
-                child: Icon(Icons.close, color: Colors.red, size: 20),
-              ),
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-// ✅ Helper widget untuk network image dengan loading state
-Widget _buildNetworkImagePreview(String imageUrl) {
-  return SizedBox(
-    width: double.infinity,
-    height: 150,
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        cacheWidth: 400,
-        cacheHeight: 400,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          
-          return Container(
-            color: const Color(0xFF3D3D3D),
-            child: Center(
-              child: SizedBox(
-                width: 40,
-                height: 40,
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                      : null,
-                  strokeWidth: 3,
-                  color: const Color(0xFFD4A017),
+                  ],
                 ),
-              ),
+              ],
             ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: const Color(0xFF3D3D3D),
-            child: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.broken_image,
-                    color: Colors.white30,
-                    size: 40,
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Gagal memuat',
-                    style: TextStyle(
-                      color: Colors.white30,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              adminC.clearSelectedImage();
+              _closeDialog();
+            },
+            child: Text('Batal', style: TextStyle(color: colorScheme.onSurfaceVariant)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
             ),
-          );
-        },
-      ),
-    ),
-  );
-}
+            onPressed: () async {
+              if (nameC.text.isEmpty || priceC.text.isEmpty) {
+                Get.snackbar(
+                  'Error',
+                  'Nama dan harga wajib diisi',
+                  backgroundColor: colorScheme.error,
+                  colorText: colorScheme.onError,
+                );
+                return;
+              }
 
-// ✅ Helper widget untuk placeholder
-Widget _buildPlaceholder() {
-  return Container(
-    width: double.infinity,
-    height: 150,
-    decoration: BoxDecoration(
-      color: const Color(0xFF3D3D3D),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.white30),
-    ),
-    child: const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.image, size: 40, color: Colors.white30),
-          SizedBox(height: 8),
-          Text(
-            'Tidak ada gambar',
-            style: TextStyle(color: Colors.white30, fontSize: 12),
+              final success = await adminC.updateMenuItem(
+                id: item.id!,
+                name: nameC.text,
+                description: descC.text,
+                price: int.parse(priceC.text),
+                imageFile: adminC.selectedImageFile.value,
+                existingImageUrl: item.imageUrl,
+              );
+
+              if (success) _closeDialog();
+            },
+            child: Text('Update', style: TextStyle(color: colorScheme.onPrimary)),
           ),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
 
-  void _confirmDelete(int id, String? imageUrl, String menuName) {
+  // ✅ Helper widget untuk image preview dengan constraint jelas
+  Widget _buildImagePreview({
+    required BuildContext context,
+    required Widget child,
+    required VoidCallback onRemove,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return SizedBox(
+      width: double.infinity,
+      height: 150,
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              width: double.infinity,
+              height: 150,
+              child: child,
+            ),
+          ),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Material(
+              color: colorScheme.surface,
+              shape: const CircleBorder(),
+              child: InkWell(
+                onTap: onRemove,
+                customBorder: const CircleBorder(),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(Icons.close, color: colorScheme.error, size: 20),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ✅ Helper widget untuk network image dengan loading state
+  Widget _buildNetworkImagePreview(BuildContext context, String imageUrl) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return SizedBox(
+      width: double.infinity,
+      height: 150,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          cacheWidth: 400,
+          cacheHeight: 400,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            
+            return Container(
+              color: colorScheme.surfaceContainerLow,
+              child: Center(
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                    strokeWidth: 3,
+                    color: colorScheme.primary,
+                  ),
+                ),
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: colorScheme.surfaceContainerLow,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.broken_image,
+                      color: colorScheme.outline,
+                      size: 40,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Gagal memuat',
+                      style: TextStyle(
+                        color: colorScheme.outline,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // ✅ Helper widget untuk placeholder
+  Widget _buildPlaceholder(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return Container(
+      width: double.infinity,
+      height: 150,
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outline),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.image, size: 40, color: colorScheme.outline),
+            const SizedBox(height: 8),
+            Text(
+              'Tidak ada gambar',
+              style: TextStyle(color: colorScheme.outline, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, int id, String? imageUrl, String menuName) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     Get.dialog(
       AlertDialog(
-        backgroundColor: const Color(0xFF2D2D2D),
-        title: const Text(
+        backgroundColor: colorScheme.surfaceContainerHighest,
+        title: Text(
           'Konfirmasi',
-          style: TextStyle(color: Color(0xFFD4A017)),
+          style: TextStyle(color: colorScheme.primary),
         ),
         content: Text(
           'Yakin ingin menghapus menu "$menuName"?',
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: colorScheme.onSurface),
         ),
         actions: [
           TextButton(
             onPressed: () => _closeDialog(),
-            child: const Text('Batal', style: TextStyle(color: Colors.white70)),
+            child: Text('Batal', style: TextStyle(color: colorScheme.onSurfaceVariant)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: colorScheme.error),
             onPressed: () async {
               final success = await adminC.deleteMenuItem(id, imageUrl, menuName: menuName);
               if (success) _closeDialog();
             },
-            child: const Text('Hapus'),
+            child: Text('Hapus', style: TextStyle(color: colorScheme.onError)),
           ),
         ],
       ),

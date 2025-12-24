@@ -22,6 +22,18 @@ class _AIRecommendationBannerState extends State<AIRecommendationBanner> {
     super.initState();
     _controller = Get.put(WeatherRecommendationController());
     
+    // Mulai auto-refresh jika belum
+    if (!_controller.isAutoRefreshing.value) {
+      _controller.startAutoRefresh();
+    }
+    
+    // Jika sudah ada rekomendasi, langsung buat teks
+    if (_controller.recommendation.value.isNotEmpty) {
+      _buildTexts();
+      _startTextRotation();
+    }
+    
+    // Listen untuk perubahan rekomendasi
     ever(_controller.recommendation, (_) {
       if (_controller.recommendation.value.isNotEmpty) {
         _buildTexts();
@@ -32,21 +44,25 @@ class _AIRecommendationBannerState extends State<AIRecommendationBanner> {
 
   void _buildTexts() {
     _texts.clear();
-    final weather = _controller.currentWeather.value;
     
+    // 1. Sambutan
+    _texts.add('Selamat datang di Warung Cakwi!');
+    
+    // 2. Cuaca Hari Ini
+    final weather = _controller.currentWeather.value;
     if (weather != null) {
-      final icon = _controller.getWeatherIcon(weather['main_weather']);
       final temp = weather['temperature'].toStringAsFixed(0);
-      _texts.add('$icon $temp°C - Lihat rekomendasi menu');
-      
-      final mainWeather = weather['main_weather'];
-      if (mainWeather == 'Rain' || mainWeather == 'Drizzle') {
-        _texts.add('🍜 Cuaca hujan, cocok untuk bakso hangat!');
-      } else if (mainWeather == 'Clear') {
-        _texts.add('☀️ Cerah! Mampir ke Warung Cakwi');
-      } else {
-        _texts.add('🍜 Menu spesial menanti Anda!');
-      }
+      final condition = weather['description'];
+      final icon = _controller.getWeatherIcon(weather['main_weather']);
+      _texts.add('$icon Cuaca: $temp°C, $condition');
+    }
+    
+    // 3. Menu Rekomendasi
+    final recommendedMenus = _controller.extractRecommendedMenus();
+    if (recommendedMenus.isNotEmpty) {
+      _texts.add('🍜 Rekomendasi Menu: ${recommendedMenus.join(', ')}');
+    } else {
+      _texts.add('🍜 RekomendasiMenu: Tidak Bisa Memunculkan Rekomendasi');
     }
   }
 
