@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controller/banner_controller.dart';
 
+<<<<<<< HEAD
+// 🔍 MARKER: AESTHETIC_MINIMALIST_BANNER
+=======
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
 class BannerView extends StatefulWidget {
   const BannerView({super.key});
 
@@ -20,6 +24,103 @@ class _BannerViewState extends State<BannerView> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    // ✅ AESTHETIC: Reduced height & cleaner design
+    return Container(
+      width: double.infinity,
+      height: 120, // Reduced from 200
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.surfaceContainerHighest,
+            colorScheme.surface,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colorScheme.primary.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: AnimatedBuilder(
+        animation: controller.animController,
+        builder: (context, child) {
+          return Transform.translate(
+            offset: Offset(0, controller.floatAnimation.value * 0.5), // Subtle float
+            child: Row(
+              children: [
+                // ✅ AESTHETIC: Compact icon
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Icon(
+                    Icons.restaurant_menu,
+                    size: 40,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                
+                // ✅ AESTHETIC: Essential text only
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        controller.title,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        controller.subtitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // ✅ AESTHETIC: Simple badge
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      controller.badge,
+                      style: TextStyle(
+                        color: colorScheme.onPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+=======
     return Container(
       width: double.infinity,
       height: 200,
@@ -113,3 +214,4 @@ class _BannerViewState extends State<BannerView> {
     );
   }
 }
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0

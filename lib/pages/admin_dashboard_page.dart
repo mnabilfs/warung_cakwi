@@ -5,6 +5,13 @@ import '../data/controllers/admin_controller.dart';
 import '../data/controllers/auth_controller.dart';
 import '../utils/price_formatter.dart';
 
+// ✅ Helper function untuk close dialog dengan aman (avoid GetX snackbar bug)
+void _closeDialog() {
+  if (Get.isDialogOpen == true) {
+    Navigator.of(Get.overlayContext!).pop();
+  }
+}
+
 class AdminDashboardPage extends StatelessWidget {
   AdminDashboardPage({super.key});
 
@@ -101,7 +108,7 @@ class AdminDashboardPage extends StatelessWidget {
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _confirmDelete(item.id!, item.imageUrl),
+                      onPressed: () => _confirmDelete(item.id!, item.imageUrl, item.name),
                     ),
                   ],
                 ),
@@ -112,8 +119,8 @@ class AdminDashboardPage extends StatelessWidget {
       }),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFFD4A017),
-        child: const Icon(Icons.add, color: Colors.black),
         onPressed: _showAddDialog,
+        child: const Icon(Icons.add, color: Colors.black),
       ),
     );
   }
@@ -281,7 +288,7 @@ class AdminDashboardPage extends StatelessWidget {
           TextButton(
             onPressed: () {
               adminC.clearSelectedImage();
-              Get.back();
+              _closeDialog();
             },
             child: const Text('Batal', style: TextStyle(color: Colors.white70)),
           ),
@@ -302,7 +309,7 @@ class AdminDashboardPage extends StatelessWidget {
                 imageFile: adminC.selectedImageFile.value,
               );
 
-              if (success) Get.back();
+              if (success) _closeDialog();
             },
             child: const Text('Simpan', style: TextStyle(color: Colors.black)),
           ),
@@ -462,7 +469,7 @@ void _showEditDialog(item) {
         TextButton(
           onPressed: () {
             adminC.clearSelectedImage();
-            Get.back();
+            _closeDialog();
           },
           child: const Text('Batal', style: TextStyle(color: Colors.white70)),
         ),
@@ -485,7 +492,7 @@ void _showEditDialog(item) {
               existingImageUrl: item.imageUrl,
             );
 
-            if (success) Get.back();
+            if (success) _closeDialog();
           },
           child: const Text('Update', style: TextStyle(color: Colors.black)),
         ),
@@ -624,7 +631,7 @@ Widget _buildPlaceholder() {
   );
 }
 
-  void _confirmDelete(int id, String? imageUrl) {
+  void _confirmDelete(int id, String? imageUrl, String menuName) {
     Get.dialog(
       AlertDialog(
         backgroundColor: const Color(0xFF2D2D2D),
@@ -632,20 +639,20 @@ Widget _buildPlaceholder() {
           'Konfirmasi',
           style: TextStyle(color: Color(0xFFD4A017)),
         ),
-        content: const Text(
-          'Yakin ingin menghapus menu ini?',
-          style: TextStyle(color: Colors.white),
+        content: Text(
+          'Yakin ingin menghapus menu "$menuName"?',
+          style: const TextStyle(color: Colors.white),
         ),
         actions: [
           TextButton(
-            onPressed: () => Get.back(),
+            onPressed: () => _closeDialog(),
             child: const Text('Batal', style: TextStyle(color: Colors.white70)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
-              final success = await adminC.deleteMenuItem(id, imageUrl);
-              if (success) Get.back();
+              final success = await adminC.deleteMenuItem(id, imageUrl, menuName: menuName);
+              if (success) _closeDialog();
             },
             child: const Text('Hapus'),
           ),

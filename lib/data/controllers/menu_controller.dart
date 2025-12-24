@@ -4,12 +4,38 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/menu_item.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'auth_controller.dart';
+import 'package:http/http.dart' as http; // TAMBAHKAN INI jika belum ada
 
 class MenuController extends GetxController {
   var menuItems = <MenuItem>[].obs;
   var cartItems = <MenuItem>[].obs;
   var isLoading = false.obs;
   var errorMessage = ''.obs;
+  
+  // 🔍 MARKER: ERROR_PREVENTION_CHECKOUT
+  // ✅ ERROR PREVENTION: Prevent Double Submission
+  var isProcessingCheckout = false.obs;
+  
+  // 🔍 MARKER: SEARCH_FUNCTIONALITY
+  // ✅ FLEXIBILITY: Search menu functionality
+  var searchQuery = ''.obs;
+  
+  // ✅ FLEXIBILITY: Filtered menu items based on search
+  List<MenuItem> get filteredMenuItems {
+    if (searchQuery.value.isEmpty) {
+      return menuItems;
+    }
+    final query = searchQuery.value.toLowerCase();
+    return menuItems.where((item) {
+      return item.name.toLowerCase().contains(query) ||
+             item.description.toLowerCase().contains(query);
+    }).toList();
+  }
+  
+  // ✅ FLEXIBILITY: Clear search
+  void clearSearch() {
+    searchQuery.value = '';
+  }
 
   
   var cloudCartIds = <int, int>{}; 
@@ -156,96 +182,163 @@ class MenuController extends GetxController {
   }
 
   
-  void addToCart(MenuItem item) async {
-    bool isUserLoggedIn = false;
-    if (Get.isRegistered<AuthController>()) {
-      isUserLoggedIn = Get.find<AuthController>().isLoggedIn;
-    }
-
-    if (isUserLoggedIn) {
-      try {
-        
-        await _supabase.from('cart_items').insert({
-          'user_id': _supabase.auth.currentUser!.id,
-          'menu_id': item.id, 
-          'quantity': 1
-        });
-        await _fetchCartFromCloud(); 
-        _showSuccessSnackbar(item.name, "Tersimpan di Cloud");
-      } catch (e) {
-        
-        cartItems.add(item);
-        await cartBox.add(item); 
-        await settingsBox.put('has_offline_changes', true); 
-        _showOfflineSnackbar(); 
-      }
-    } else {
-      cartItems.add(item);
-      await cartBox.add(item);
-      _showOfflineSnackbar();
-    }
-
-     
-     _debugPrintHiveData();
+  // 🔍 MARKER: ERROR_PREVENTION_ADD_TO_CART
+void addToCart(MenuItem item) async {
+  // ✅ ERROR PREVENTION: Duplicate Check
+  if (cartItems.any((i) => i.id == item.id)) {
+    Get.snackbar(
+      "Item Sudah Ada",
+      "${item.name} sudah ada di keranjang",
+      icon: const Icon(Icons.info_outline, color: Colors.white),
+      backgroundColor: Colors.orange.withOpacity(0.9),
+      colorText: Colors.white,
+      snackPosition: SnackPosition.TOP,
+      duration: const Duration(seconds: 2),
+    );
+    return;
   }
+
+  // Kode existing Anda lanjut...
+  bool isUserLoggedIn = false;
+  if (Get.isRegistered<AuthController>()) {
+    isUserLoggedIn = Get.find<AuthController>().isLoggedIn;
+  }
+
+  if (isUserLoggedIn) {
+    try {
+      await _supabase.from('cart_items').insert({
+        'user_id': _supabase.auth.currentUser!.id,
+        'menu_id': item.id, 
+        'quantity': 1
+      });
+      await _fetchCartFromCloud(); 
+      _showSuccessSnackbar(item.name, "Tersimpan di Cloud");
+    } catch (e) {
+      cartItems.add(item);
+      await cartBox.add(item); 
+      await settingsBox.put('has_offline_changes', true); 
+      _showOfflineSnackbar(); 
+    }
+  } else {
+    cartItems.add(item);
+    await cartBox.add(item);
+    _showOfflineSnackbar();
+  }
+
+  _debugPrintHiveData();
+}
 
   
-  void removeFromCart(int index) async {
-     bool isUserLoggedIn = false;
-    if (Get.isRegistered<AuthController>()) {
-      isUserLoggedIn = Get.find<AuthController>().isLoggedIn;
-    }
+// 🔍 MARKER: ERROR_PREVENTION_REMOVE_CART
+void removeFromCart(int index) async {
+  // ✅ ERROR PREVENTION: Confirmation Dialog
+  final confirmed = await Get.dialog<bool>(
+    AlertDialog(
+      title: const Text('Hapus Item?'),
+      content: Text('Yakin ingin menghapus "${cartItems[index].name}" dari keranjang?'),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(result: false),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: () => Get.back(result: true),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          child: const Text('Hapus'),
+        ),
+      ],
+    ),
+  );
 
-    if (index < cartItems.length) cartItems.removeAt(index);
+  // Jika tidak dikonfirmasi, return
+  if (confirmed != true) return;
 
-    if (isUserLoggedIn) {
-      try {
-        final cartIdToDelete = cloudCartIds[index];
-        if (cartIdToDelete != null) {
-          await _supabase.from('cart_items').delete().eq('id', cartIdToDelete);
-          await _fetchCartFromCloud(); 
-        } else {
-          await _fetchCartFromCloud();
-        }
-      } catch (e) {
-        
-        if (index < cartBox.length) await cartBox.deleteAt(index);
-        await settingsBox.put('has_offline_changes', true); 
-        _showOfflineSnackbar();
+  // Kode existing Anda lanjut di sini...
+  bool isUserLoggedIn = false;
+  if (Get.isRegistered<AuthController>()) {
+    isUserLoggedIn = Get.find<AuthController>().isLoggedIn;
+  }
+
+  if (index < cartItems.length) cartItems.removeAt(index);
+
+  if (isUserLoggedIn) {
+    try {
+      final cartIdToDelete = cloudCartIds[index];
+      if (cartIdToDelete != null) {
+        await _supabase.from('cart_items').delete().eq('id', cartIdToDelete);
+        await _fetchCartFromCloud(); 
+      } else {
+        await _fetchCartFromCloud();
       }
-    } else {
+    } catch (e) {
       if (index < cartBox.length) await cartBox.deleteAt(index);
+      await settingsBox.put('has_offline_changes', true); 
+      _showOfflineSnackbar();
     }
-    
-    _debugPrintHiveData();
+  } else {
+    if (index < cartBox.length) await cartBox.deleteAt(index);
   }
-
+  
+  _debugPrintHiveData();
+}
   // Clear all cart items after successful checkout
-  void clearCart() async {
-    bool isUserLoggedIn = false;
-    if (Get.isRegistered<AuthController>()) {
-      isUserLoggedIn = Get.find<AuthController>().isLoggedIn;
-    }
-
-    // Clear observable list
-    cartItems.clear();
-
-    if (isUserLoggedIn) {
-      try {
-        final userId = _supabase.auth.currentUser!.id;
-        await _supabase.from('cart_items').delete().eq('user_id', userId);
-        cloudCartIds.clear();
-      } catch (e) {
-        print("⚠️ Gagal menghapus cart dari Cloud: $e");
-      }
-    }
-
-    // Clear local storage
-    await cartBox.clear();
-    await settingsBox.put('has_offline_changes', false);
-
-    _debugPrintHiveData();
+// 🔍 MARKER: ERROR_PREVENTION_CLEAR_CART
+void clearCart() async {
+  // ✅ ERROR PREVENTION: Empty State Check
+  if (cartItems.isEmpty) {
+    Get.snackbar(
+      'Info', 
+      'Keranjang sudah kosong',
+      backgroundColor: Colors.blue.withOpacity(0.8),
+      colorText: Colors.white,
+    );
+    return;
   }
+
+  // ✅ ERROR PREVENTION: Confirmation Dialog
+  final confirmed = await Get.dialog<bool>(
+    AlertDialog(
+      title: const Text('Kosongkan Keranjang?'),
+      content: Text('Yakin ingin menghapus semua ${cartItems.length} item?'),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(result: false),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: () => Get.back(result: true),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          child: const Text('Hapus Semua'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed != true) return;
+
+  // Kode existing Anda lanjut di sini...
+  bool isUserLoggedIn = false;
+  if (Get.isRegistered<AuthController>()) {
+    isUserLoggedIn = Get.find<AuthController>().isLoggedIn;
+  }
+
+  cartItems.clear();
+
+  if (isUserLoggedIn) {
+    try {
+      final userId = _supabase.auth.currentUser!.id;
+      await _supabase.from('cart_items').delete().eq('user_id', userId);
+      cloudCartIds.clear();
+    } catch (e) {
+      print("⚠️ Gagal menghapus cart dari Cloud: $e");
+    }
+  }
+
+  await cartBox.clear();
+  await settingsBox.put('has_offline_changes', false);
+
+  _debugPrintHiveData();
+}
     
     
     void _debugPrintHiveData() {
@@ -292,27 +385,71 @@ class MenuController extends GetxController {
   }
 
   
-  Future<void> fetchMenuItems() async {
-    try {
-      isLoading.value = true;
-      final response = await _supabase.from('menu_items').select();
-      final List<MenuItem> data = (response as List<dynamic>)
-          .map((item) => MenuItem.fromJson(item))
-          .toList();
-      await menuBox.clear();
-      await menuBox.addAll(data);
-      menuItems.assignAll(data);
-      errorMessage.value = '';
-    } catch (e) {
-      errorMessage.value = e.toString();
+ // 🔍 MARKER: ERROR_PREVENTION_FETCH_MENU
+Future<void> fetchMenuItems() async {
+  try {
+    isLoading.value = true;
+
+    // ✅ ERROR PREVENTION: Network Check
+    if (!await _checkNetworkConnection()) {
+      // Gunakan cache jika ada
       if (menuBox.isNotEmpty) {
         menuItems.assignAll(menuBox.values.toList());
         errorMessage.value = '';
+        Get.snackbar(
+          "Mode Offline",
+          "Menggunakan data cache",
+          icon: const Icon(Icons.wifi_off, color: Colors.white),
+          backgroundColor: Colors.orange.withOpacity(0.9),
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+        );
+      } else {
+        errorMessage.value = 'Tidak ada koneksi internet & tidak ada cache';
+        Get.snackbar(
+          "Tidak Ada Koneksi",
+          "Silakan cek koneksi internet Anda",
+          icon: const Icon(Icons.signal_wifi_off, color: Colors.white),
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+        );
       }
-    } finally {
-      isLoading.value = false;
+      return;
     }
+
+    // Kode existing - fetch dari Supabase
+    final response = await _supabase.from('menu_items').select();
+    final List<MenuItem> data = (response as List<dynamic>)
+        .map((item) => MenuItem.fromJson(item))
+        .toList();
+    await menuBox.clear();
+    await menuBox.addAll(data);
+    menuItems.assignAll(data);
+    errorMessage.value = '';
+  } catch (e) {
+    errorMessage.value = e.toString();
+    if (menuBox.isNotEmpty) {
+      menuItems.assignAll(menuBox.values.toList());
+      errorMessage.value = '';
+    }
+  } finally {
+    isLoading.value = false;
   }
+}
+
+// ✅ ERROR PREVENTION: Network Check Helper
+// 🔍 MARKER: NETWORK_CHECK_HELPER
+Future<bool> _checkNetworkConnection() async {
+  try {
+    final response = await http.get(
+      Uri.parse('https://www.google.com'),
+    ).timeout(const Duration(seconds: 3));
+    return response.statusCode == 200;
+  } catch (e) {
+    return false;
+  }
+}
 
   
   void _showOfflineSnackbar() {

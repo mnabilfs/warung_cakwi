@@ -66,6 +66,7 @@ dependencies:
   flutter_map: ^7.0.0 # Untuk menampilkan peta OpenStreetMap
   latlong2: ^0.9.1    # Untuk koordinat
   permission_handler: ^11.3.1 # Untuk izin lokasi
+  googleapis_auth: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -94,6 +95,7 @@ flutter:
   # Assets untuk gambar produk
   assets:
     - assets/images/
+    - assets/firebase-service-account.json
     - .env
 
   # To add assets to your application, add an assets section, like this:

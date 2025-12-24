@@ -32,9 +32,28 @@ class _CartPageState extends State<CartPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
+<<<<<<< HEAD
+        title: Text(
+          'Keranjang Belanja',
+          style: textTheme.titleLarge?.copyWith(color: colorScheme.primary),
+        ),
+        backgroundColor: colorScheme.surfaceContainerHighest,
+        iconTheme: IconThemeData(color: colorScheme.primary),
+      ),
+      
+      body: Obx(() {
+        // Access observable directly for GetX to track
+        final items = controller.cartItems;
+        final total = items.fold(0, (sum, item) => sum + item.price);
+        
+        if (items.isEmpty) {
+=======
         title: const Text(
           'Keranjang Belanja',
           style: TextStyle(color: Color(0xFFD4A017)),
@@ -46,6 +65,7 @@ class _CartPageState extends State<CartPage> {
       body: Obx(() {
         
         if (cartItems.isEmpty) {
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
           return const CartEmptyView();
         }
         
@@ -54,9 +74,15 @@ class _CartPageState extends State<CartPage> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
+<<<<<<< HEAD
+                itemCount: items.length, 
+                itemBuilder: (context, index) {
+                  final item = items[index];
+=======
                 itemCount: cartItems.length, 
                 itemBuilder: (context, index) {
                   final item = cartItems[index];
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
                   
                   return CartItemView(
                     item: item,
@@ -67,9 +93,16 @@ class _CartPageState extends State<CartPage> {
             ),
             
             CartTotalView(
+<<<<<<< HEAD
+              itemCount: items.length, 
+              totalPrice: total,
+              onCheckout: _showCheckoutDialog,
+              isProcessing: controller.isProcessingCheckout.value, // ✅ Pass state
+=======
               itemCount: cartItems.length, 
               totalPrice: totalPrice,
               onCheckout: _showCheckoutDialog,
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
             ),
           ],
         );
@@ -106,11 +139,149 @@ class _CartPageState extends State<CartPage> {
     
   }
 
+  // 🔍 MARKER: ERROR_PREVENTION_CHECKOUT
   void _showCheckoutDialog() {
     String? selectedPaymentMethod;
     
     showDialog(
       context: context,
+<<<<<<< HEAD
+      barrierDismissible: false, // ✅ Prevent dismissing during process
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => Obx(() {
+          final isProcessing = controller.isProcessingCheckout.value;
+          
+          return AlertDialog(
+            backgroundColor: const Color(0xFF2D2D2D),
+            title: const Text(
+              'Pilih Metode Pembayaran',
+              style: TextStyle(color: Color(0xFFD4A017)),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Total: Rp ${PriceFormatter.format(totalPrice)}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Metode Pembayaran:',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 12),
+                // Bayar di Tempat - Active
+                AbsorbPointer(
+                  absorbing: isProcessing, // ✅ Disable saat processing
+                  child: Opacity(
+                    opacity: isProcessing ? 0.5 : 1.0,
+                    child: _buildPaymentMethodCard(
+                      title: 'Bayar di Tempat',
+                      subtitle: 'Bayar saat pesanan diantar',
+                      icon: Icons.payments_outlined,
+                      isSelected: selectedPaymentMethod == 'cod',
+                      isEnabled: true,
+                      onTap: () {
+                        setDialogState(() {
+                          selectedPaymentMethod = 'cod';
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // QRIS - Coming Soon
+                _buildPaymentMethodCard(
+                  title: 'QRIS',
+                  subtitle: 'Scan QR untuk pembayaran',
+                  icon: Icons.qr_code_2,
+                  isSelected: false,
+                  isEnabled: false,
+                  badge: 'Segera Hadir',
+                  onTap: null,
+                ),
+              ],
+            ),
+            actions: [
+              // ✅ Hide cancel during processing
+              if (!isProcessing)
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text(
+                    'Batal',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: (selectedPaymentMethod != null && !isProcessing)
+                      ? const Color(0xFFD4A017) 
+                      : Colors.grey,
+                  foregroundColor: Colors.black,
+                ),
+                // ✅ ERROR PREVENTION: Disable saat processing atau belum pilih
+                onPressed: (selectedPaymentMethod != null && !isProcessing)
+                    ? () async {
+                        // ✅ Check if already processing
+                        if (controller.isProcessingCheckout.value) {
+                          Get.snackbar(
+                            'Mohon Tunggu',
+                            'Checkout sedang diproses...',
+                            backgroundColor: Colors.orange,
+                            colorText: Colors.white,
+                          );
+                          return;
+                        }
+                        
+                        // ✅ Set processing state
+                        controller.isProcessingCheckout.value = true;
+                        
+                        try {
+                          // Simulasi proses checkout (ganti dengan API call sebenarnya)
+                          await Future.delayed(const Duration(seconds: 1));
+                          
+                          Navigator.pop(dialogContext);
+                          _showSuccessMessage(selectedPaymentMethod!);
+                        } catch (e) {
+                          Get.snackbar(
+                            'Gagal',
+                            'Terjadi kesalahan: $e',
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                        } finally {
+                          // ✅ Reset processing state
+                          controller.isProcessingCheckout.value = false;
+                        }
+                      }
+                    : null,
+                child: isProcessing
+                    ? const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Memproses...'),
+                        ],
+                      )
+                    : const Text('Lanjutkan'),
+              ),
+            ],
+          );
+        }),
+=======
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           backgroundColor: const Color(0xFF2D2D2D),
@@ -187,6 +358,7 @@ class _CartPageState extends State<CartPage> {
             ),
           ],
         ),
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
       ),
     );
   }
@@ -287,7 +459,40 @@ class _CartPageState extends State<CartPage> {
               ),
           ],
         ),
+<<<<<<< HEAD
       ),
+    );
+  }
+
+  void _showSuccessMessage(String paymentMethod) {
+    String methodText = paymentMethod == 'cod' ? 'Bayar di Tempat' : 'QRIS';
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Pesanan berhasil! Metode: $methodText',
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+        ),
+        backgroundColor: const Color(0xFF2D2D2D),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: const BorderSide(color: Color(0xFFD4A017), width: 1),
+        ),
+=======
+>>>>>>> 0279b523e68f471dbc004169954a430aa50334b0
+      ),
+    );
+    
+    // Clear cart after successful order
+    controller.clearCart();
+    
+    // Show notification
+    final notificationHandler = NotificationHandler();
+    notificationHandler.showNotification(
+      title: 'Pesanan Berhasil! 🎉',
+      body: 'Pesanan Anda sedang diproses. Metode pembayaran: $methodText',
     );
   }
 
