@@ -1,29 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart'; 
+import 'package:get/get.dart';
 import '../data/models/menu_item.dart';
 import '../widgets/cart/mengatur_tampilan_saat_keranjang_kosong/view/cartempty_view.dart';
 import '../widgets/cart/mengatur_tampilan_item_dalam_keranjang/view/cartitem_view.dart';
 import '../widgets/cart/mengatur_bagian_bawah_halaman/view/carttotal_view.dart';
 import '../utils/price_formatter.dart';
 import '../data/controllers/menu_controller.dart' as my;
-import '../data/services/notification_handler.dart'; 
+import '../data/services/notification_handler.dart';
+import '../data/controllers/order_controller.dart';
 
 class CartPage extends StatefulWidget {
-
-  
-  const CartPage({
-    super.key,
-  });
+  const CartPage({super.key});
 
   @override
   State<CartPage> createState() => _CartPageState();
 }
 
 class _CartPageState extends State<CartPage> {
-  
   final my.MenuController controller = Get.find<my.MenuController>();
-  
-  List<MenuItem> get cartItems => controller.cartItems; 
+  final OrderController orderController = Get.put(OrderController());
+
+  List<MenuItem> get cartItems => controller.cartItems;
 
   int get totalPrice => cartItems.fold(0, (sum, item) => sum + item.price);
 
@@ -31,7 +28,7 @@ class _CartPageState extends State<CartPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
@@ -42,35 +39,35 @@ class _CartPageState extends State<CartPage> {
         backgroundColor: colorScheme.surfaceContainerHighest,
         iconTheme: IconThemeData(color: colorScheme.primary),
       ),
-      
+
       body: Obx(() {
         // Access observable directly for GetX to track
         final items = controller.cartItems;
         final total = items.fold(0, (sum, item) => sum + item.price);
-        
+
         if (items.isEmpty) {
           return const CartEmptyView();
         }
-        
+
         return Column(
           children: [
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: items.length, 
+                itemCount: items.length,
                 itemBuilder: (context, index) {
                   final item = items[index];
-                  
+
                   return CartItemView(
                     item: item,
-                    onRemove: () => _removeItem(index), 
+                    onRemove: () => _removeItem(index),
                   );
                 },
               ),
             ),
-            
+
             CartTotalView(
-              itemCount: items.length, 
+              itemCount: items.length,
               totalPrice: total,
               onCheckout: _showCheckoutDialog,
               isProcessing: controller.isProcessingCheckout.value,
@@ -82,13 +79,10 @@ class _CartPageState extends State<CartPage> {
   }
 
   void _removeItem(int index) {
-    
     final item = cartItems[index];
-    
-    
+
     controller.removeFromCart(index);
-    
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -107,19 +101,18 @@ class _CartPageState extends State<CartPage> {
         ),
       ),
     );
-    
   }
 
   void _showCheckoutDialog() {
     String? selectedPaymentMethod;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => Obx(() {
           final isProcessing = controller.isProcessingCheckout.value;
-          
+
           return AlertDialog(
             backgroundColor: const Color(0xFF2D2D2D),
             title: const Text(
@@ -144,7 +137,7 @@ class _CartPageState extends State<CartPage> {
                   style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 const SizedBox(height: 12),
-                // Bayar di Tempat - Active
+                // Bayar di Tempat
                 AbsorbPointer(
                   absorbing: isProcessing,
                   child: Opacity(
@@ -187,8 +180,9 @@ class _CartPageState extends State<CartPage> {
                 ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: (selectedPaymentMethod != null && !isProcessing)
-                      ? const Color(0xFFD4A017) 
+                  backgroundColor:
+                      (selectedPaymentMethod != null && !isProcessing)
+                      ? const Color(0xFFD4A017)
                       : Colors.grey,
                   foregroundColor: Colors.black,
                 ),
@@ -203,14 +197,23 @@ class _CartPageState extends State<CartPage> {
                           );
                           return;
                         }
-                        
+
                         controller.isProcessingCheckout.value = true;
-                        
+
                         try {
-                          await Future.delayed(const Duration(seconds: 1));
-                          
-                          Navigator.pop(dialogContext);
-                          _showSuccessMessage(selectedPaymentMethod!);
+                          // ✅ PANGGIL OrderController.createOrder()
+                          final orderController = Get.find<OrderController>();
+
+                          final success = await orderController.createOrder(
+                            cartItems: cartItems.toList(),
+                            totalPrice: totalPrice,
+                            paymentMethod: selectedPaymentMethod!,
+                          );
+
+                          if (success) {
+                            Navigator.pop(dialogContext);
+                            _showSuccessMessage(selectedPaymentMethod!);
+                          }
                         } catch (e) {
                           Get.snackbar(
                             'Gagal',
@@ -265,9 +268,7 @@ class _CartPageState extends State<CartPage> {
           color: isEnabled ? const Color(0xFF3D3D3D) : const Color(0xFF2A2A2A),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected 
-                ? const Color(0xFFD4A017) 
-                : Colors.transparent,
+            color: isSelected ? const Color(0xFFD4A017) : Colors.transparent,
             width: 2,
           ),
         ),
@@ -276,7 +277,7 @@ class _CartPageState extends State<CartPage> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isEnabled 
+                color: isEnabled
                     ? const Color(0xFFD4A017).withOpacity(0.2)
                     : Colors.grey.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(10),
@@ -350,12 +351,15 @@ class _CartPageState extends State<CartPage> {
 
   void _showSuccessMessage(String paymentMethod) {
     String methodText = paymentMethod == 'cod' ? 'Bayar di Tempat' : 'QRIS';
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           'Pesanan berhasil! Metode: $methodText',
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         backgroundColor: const Color(0xFF2D2D2D),
         duration: const Duration(seconds: 2),
@@ -366,10 +370,10 @@ class _CartPageState extends State<CartPage> {
         ),
       ),
     );
-    
+
     // Clear cart after successful order
     controller.clearCart();
-    
+
     // Show notification
     final notificationHandler = NotificationHandler();
     notificationHandler.showNotification(

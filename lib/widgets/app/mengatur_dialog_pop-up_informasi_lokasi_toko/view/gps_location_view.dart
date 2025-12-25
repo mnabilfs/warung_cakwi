@@ -16,21 +16,25 @@ class GpsLocationView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<GpsLocationController>();
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'GPS Location - Warung Cakwi',
-          style: TextStyle(fontSize: 18),
+          style: TextStyle(fontSize: 18, color: colorScheme.onPrimaryContainer),
         ),
+        backgroundColor: colorScheme.surfaceContainerHighest,
+        iconTheme: IconThemeData(color: colorScheme.primary),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh, color: colorScheme.primary),
             onPressed: controller.refreshPosition,
             tooltip: 'Refresh Location',
           ),
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: Icon(Icons.settings, color: colorScheme.primary),
             onPressed: controller.openAppSettings,
             tooltip: 'Open Settings',
           ),
@@ -39,13 +43,18 @@ class GpsLocationView extends StatelessWidget {
       body: Obx(() {
         // Loading state
         if (controller.isLoading) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Mendapatkan lokasi...'),
+                CircularProgressIndicator(color: colorScheme.primary),
+                const SizedBox(height: 16),
+                Text(
+                  'Mendapatkan lokasi...',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
+                ),
               ],
             ),
           );
@@ -60,18 +69,30 @@ class GpsLocationView extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  Icon(Icons.error_outline, size: 64, color: colorScheme.error),
                   const SizedBox(height: 16),
                   Text(
                     controller.errorMessage,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16),
+                    style: textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: errorAction['action'] as VoidCallback?,
-                    icon: Icon(errorAction['icon'] as IconData),
-                    label: Text(errorAction['label'] as String),
+                    icon: Icon(
+                      errorAction['icon'] as IconData,
+                      color: colorScheme.onSecondary,
+                    ),
+                    label: Text(
+                      errorAction['label'] as String,
+                      style: TextStyle(color: colorScheme.onSecondary),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.secondary,
+                      foregroundColor: colorScheme.onSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -86,10 +107,10 @@ class GpsLocationView extends StatelessWidget {
               children: [
                 // Navigation Info Section
                 if (controller.currentPosition != null)
-                  _buildNavigationInfo(controller),
+                  _buildNavigationInfo(controller, colorScheme, textTheme),
 
                 // OpenStreetMap Section
-                Expanded(child: _buildOpenStreetMap(controller)),
+                Expanded(child: _buildOpenStreetMap(controller, colorScheme)),
               ],
             ),
             // Zoom controls
@@ -102,6 +123,8 @@ class GpsLocationView extends StatelessWidget {
                   FloatingActionButton(
                     heroTag: 'gps_zoom_in',
                     mini: true,
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    foregroundColor: colorScheme.primary,
                     onPressed: () {
                       try {
                         controller.zoomIn();
@@ -117,6 +140,8 @@ class GpsLocationView extends StatelessWidget {
                   FloatingActionButton(
                     heroTag: 'gps_zoom_out',
                     mini: true,
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    foregroundColor: colorScheme.primary,
                     onPressed: () {
                       try {
                         controller.zoomOut();
@@ -132,6 +157,8 @@ class GpsLocationView extends StatelessWidget {
                   FloatingActionButton(
                     heroTag: 'gps_center',
                     mini: true,
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    foregroundColor: colorScheme.primary,
                     onPressed: () {
                       try {
                         controller.moveToCurrentPosition();
@@ -153,20 +180,30 @@ class GpsLocationView extends StatelessWidget {
   }
 
   /// Build navigation info card
-  Widget _buildNavigationInfo(GpsLocationController controller) {
-    final navInfo = NavigationHelper.getNavigationInfo(controller.currentPosition!);
-    
+  Widget _buildNavigationInfo(
+    GpsLocationController controller,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
+    final navInfo = NavigationHelper.getNavigationInfo(
+      controller.currentPosition!,
+    );
+
+    // PERBAIKAN 1: Gunakan warna dari tema
+    final primaryColor = colorScheme.primary;
+    final secondaryColor = colorScheme.primaryContainer;
+
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.green.shade600, Colors.green.shade400],
+          colors: [primaryColor, secondaryColor],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: colorScheme.shadow.withOpacity(0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -180,12 +217,12 @@ class GpsLocationView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: colorScheme.onPrimary.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.restaurant,
-                  color: Colors.white,
+                  color: colorScheme.onPrimary,
                   size: 24,
                 ),
               ),
@@ -194,18 +231,17 @@ class GpsLocationView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Warung Cakwi',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
+                      style: textTheme.titleLarge?.copyWith(
+                        color: colorScheme.onPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
                       'Arah: ${navInfo['direction']}',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: colorScheme.onPrimary.withOpacity(0.9),
                         fontSize: 14,
                       ),
                     ),
@@ -219,7 +255,7 @@ class GpsLocationView extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: colorScheme.onPrimary,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -228,16 +264,16 @@ class GpsLocationView extends StatelessWidget {
                       Container(
                         width: 6,
                         height: 6,
-                        decoration: const BoxDecoration(
-                          color: Colors.green,
+                        decoration: BoxDecoration(
+                          color: primaryColor,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 4),
-                      const Text(
+                      Text(
                         'LIVE',
                         style: TextStyle(
-                          color: Colors.green,
+                          color: primaryColor,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
@@ -248,7 +284,7 @@ class GpsLocationView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Distance & Time Cards
           Row(
             children: [
@@ -257,6 +293,8 @@ class GpsLocationView extends StatelessWidget {
                   icon: Icons.straighten,
                   label: 'Jarak',
                   value: navInfo['distanceFormatted'],
+                  colorScheme: colorScheme,
+                  primaryColor: primaryColor,
                 ),
               ),
               const SizedBox(width: 12),
@@ -265,6 +303,8 @@ class GpsLocationView extends StatelessWidget {
                   icon: Icons.directions_walk,
                   label: 'Jalan Kaki',
                   value: navInfo['walkingTime'],
+                  colorScheme: colorScheme,
+                  primaryColor: primaryColor,
                 ),
               ),
             ],
@@ -274,20 +314,22 @@ class GpsLocationView extends StatelessWidget {
             icon: Icons.directions_car,
             label: 'Kendaraan',
             value: navInfo['drivingTime'],
+            colorScheme: colorScheme,
+            primaryColor: primaryColor,
           ),
-          
+
           // Coordinates (collapsible)
           const SizedBox(height: 12),
           ExpansionTile(
             tilePadding: EdgeInsets.zero,
             backgroundColor: Colors.transparent,
             collapsedBackgroundColor: Colors.transparent,
-            iconColor: Colors.white,
-            collapsedIconColor: Colors.white,
-            title: const Text(
+            iconColor: colorScheme.onPrimary,
+            collapsedIconColor: colorScheme.onPrimary,
+            title: Text(
               'Detail Koordinat',
               style: TextStyle(
-                color: Colors.white,
+                color: colorScheme.onPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
@@ -296,7 +338,7 @@ class GpsLocationView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
+                  color: colorScheme.onPrimary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -305,18 +347,21 @@ class GpsLocationView extends StatelessWidget {
                       'Lat',
                       controller.latitude?.toStringAsFixed(6) ?? 'N/A',
                       Icons.north,
+                      colorScheme,
                     ),
                     const SizedBox(height: 8),
                     _buildCoordinateRow(
                       'Lng',
                       controller.longitude?.toStringAsFixed(6) ?? 'N/A',
                       Icons.east,
+                      colorScheme,
                     ),
                     const SizedBox(height: 8),
                     _buildCoordinateRow(
                       'Akurasi',
                       '${controller.accuracy?.toStringAsFixed(1) ?? 'N/A'} m',
                       Icons.my_location,
+                      colorScheme,
                     ),
                   ],
                 ),
@@ -332,15 +377,17 @@ class GpsLocationView extends StatelessWidget {
     required IconData icon,
     required String label,
     required String value,
+    required ColorScheme colorScheme,
+    required Color primaryColor,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: colorScheme.shadow.withOpacity(0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -348,7 +395,7 @@ class GpsLocationView extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.green.shade700),
+          Icon(icon, size: 20, color: primaryColor),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -358,16 +405,16 @@ class GpsLocationView extends StatelessWidget {
                   label,
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.grey[600],
+                    color: colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -378,10 +425,15 @@ class GpsLocationView extends StatelessWidget {
     );
   }
 
-  Widget _buildCoordinateRow(String label, String value, IconData icon) {
+  Widget _buildCoordinateRow(
+    String label,
+    String value,
+    IconData icon,
+    ColorScheme colorScheme,
+  ) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.white),
+        Icon(icon, size: 16, color: colorScheme.onPrimary),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
@@ -391,15 +443,15 @@ class GpsLocationView extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: colorScheme.onPrimary.withOpacity(0.7),
                 ),
               ),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: colorScheme.onPrimary,
                   fontFamily: 'monospace',
                 ),
               ),
@@ -407,7 +459,7 @@ class GpsLocationView extends StatelessWidget {
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.copy, size: 16, color: Colors.white),
+          icon: Icon(Icons.copy, size: 16, color: colorScheme.onPrimary),
           onPressed: () {
             Clipboard.setData(ClipboardData(text: value));
             Get.snackbar(
@@ -415,8 +467,8 @@ class GpsLocationView extends StatelessWidget {
               '$label: $value',
               snackPosition: SnackPosition.BOTTOM,
               duration: const Duration(seconds: 2),
-              backgroundColor: Colors.black87,
-              colorText: Colors.white,
+              backgroundColor: colorScheme.surfaceContainerHighest,
+              colorText: colorScheme.onSurface,
             );
           },
         ),
@@ -425,23 +477,40 @@ class GpsLocationView extends StatelessWidget {
   }
 
   /// Build OpenStreetMap with markers and route line
-  Widget _buildOpenStreetMap(GpsLocationController controller) {
+  Widget _buildOpenStreetMap(
+    GpsLocationController controller,
+    ColorScheme colorScheme,
+  ) {
     if (controller.currentPosition == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.map, size: 64, color: Colors.grey),
+            Icon(
+              Icons.map,
+              size: 64,
+              color: colorScheme.onSurface.withOpacity(0.5),
+            ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Menunggu data lokasi...',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6)),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: controller.getCurrentPosition,
-              icon: const Icon(Icons.location_searching),
-              label: const Text('Dapatkan Lokasi'),
+              icon: Icon(
+                Icons.location_searching,
+                color: colorScheme.onPrimary,
+              ),
+              label: Text(
+                'Dapatkan Lokasi',
+                style: TextStyle(color: colorScheme.onPrimary),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+              ),
             ),
           ],
         ),
@@ -454,6 +523,9 @@ class GpsLocationView extends StatelessWidget {
         final routeLine = NavigationHelper.generateRouteLine(
           controller.currentPosition!,
         );
+
+        // PERBAIKAN 2: Gunakan warna dari tema untuk konsistensi
+        final markerColor = colorScheme.primary;
 
         return FlutterMap(
           mapController: controller.mapController,
@@ -484,25 +556,25 @@ class GpsLocationView extends StatelessWidget {
               maxZoom: 19,
               retinaMode: MediaQuery.of(Get.context!).devicePixelRatio > 1.0,
             ),
-            
+
             // Route line (polyline)
             PolylineLayer(
               polylines: [
                 Polyline(
                   points: routeLine,
                   strokeWidth: 4,
-                  color: Colors.blue.shade600,
-                  borderColor: Colors.white,
+                  color: markerColor,
+                  borderColor: colorScheme.surface,
                   borderStrokeWidth: 2,
                 ),
               ],
             ),
-            
+
             // Markers
             if (controller.currentPosition != null)
               MarkerLayer(
                 markers: [
-                  // User marker (green)
+                  // User marker (warna primary)
                   Marker(
                     point: LatLng(controller.latitude!, controller.longitude!),
                     width: 40,
@@ -510,26 +582,29 @@ class GpsLocationView extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.green,
+                        color: markerColor,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
+                        border: Border.all(
+                          color: colorScheme.surface,
+                          width: 3,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
+                            color: colorScheme.shadow.withOpacity(0.3),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.person,
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                         size: 20,
                       ),
                     ),
                   ),
-                  
-                  // Warung marker (red/orange)
+
+                  // Warung marker (warna secondary untuk kontras)
                   Marker(
                     point: NavigationHelper.warungLocation,
                     width: 50,
@@ -539,21 +614,24 @@ class GpsLocationView extends StatelessWidget {
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.orange,
+                            color: colorScheme.secondary,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3),
+                            border: Border.all(
+                              color: colorScheme.surface,
+                              width: 3,
+                            ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.3),
+                                color: colorScheme.shadow.withOpacity(0.3),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
                             ],
                           ),
                           padding: const EdgeInsets.all(8),
-                          child: const Icon(
+                          child: Icon(
                             Icons.restaurant,
-                            color: Colors.white,
+                            color: colorScheme.onSecondary,
                             size: 20,
                           ),
                         ),
@@ -562,13 +640,27 @@ class GpsLocationView extends StatelessWidget {
                   ),
                 ],
               ),
-            
+
             RichAttributionWidget(
               alignment: AttributionAlignment.bottomLeft,
-              popupBackgroundColor: Colors.white,
+              popupBackgroundColor: colorScheme.surfaceContainerHighest,
               attributions: [
-                TextSourceAttribution('OpenStreetMap', onTap: () => {}),
-                TextSourceAttribution('Contributors', onTap: () => {}),
+                TextSourceAttribution(
+                  'OpenStreetMap',
+                  onTap: () => {},
+                  textStyle: TextStyle(
+                    color: colorScheme.onSurface,
+                    fontSize: 10,
+                  ),
+                ),
+                TextSourceAttribution(
+                  'Contributors',
+                  onTap: () => {},
+                  textStyle: TextStyle(
+                    color: colorScheme.onSurface,
+                    fontSize: 10,
+                  ),
+                ),
               ],
             ),
           ],
@@ -581,17 +673,27 @@ class GpsLocationView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              Icon(Icons.error_outline, size: 64, color: colorScheme.error),
               const SizedBox(height: 16),
-              const Text('Error loading map', style: TextStyle(fontSize: 16)),
+              Text(
+                'Error loading map',
+                style: TextStyle(fontSize: 16, color: colorScheme.onSurface),
+              ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () {
                   controller.resetMapController();
                   controller.refreshPosition();
                 },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                icon: Icon(Icons.refresh, color: colorScheme.onPrimary),
+                label: Text(
+                  'Retry',
+                  style: TextStyle(color: colorScheme.onPrimary),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                ),
               ),
             ],
           ),

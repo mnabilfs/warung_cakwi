@@ -9,6 +9,7 @@ import '../widgets/app/mengatur_dialog_pop-up_informasi_lokasi_toko/bindings/loc
 
 import '../pages/weather_recommendation_page.dart';
 import '../pages/help_page.dart';
+import '../pages/user_orders_page.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -33,11 +34,14 @@ class AppDrawer extends StatelessWidget {
             final isLoggedIn = user != null;
             final isAdmin = profile?.isAdmin ?? false;
             final role = profile?.role ?? 'user';
-            
+
             return DrawerHeader(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [colorScheme.surfaceContainerHighest, colorScheme.surface],
+                  colors: [
+                    colorScheme.surfaceContainerHighest,
+                    colorScheme.surface,
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -46,11 +50,7 @@ class AppDrawer extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Icon(
-                    Icons.restaurant,
-                    size: 50,
-                    color: colorScheme.primary,
-                  ),
+                  Icon(Icons.restaurant, size: 50, color: colorScheme.primary),
                   const SizedBox(height: 10),
                   Text(
                     'Bakso Ojolali Cakwi',
@@ -75,13 +75,17 @@ class AppDrawer extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: isAdmin ? colorScheme.error : colorScheme.tertiary,
+                            color: isAdmin
+                                ? colorScheme.error
+                                : colorScheme.tertiary,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             role.toUpperCase(),
                             style: textTheme.labelSmall?.copyWith(
-                              color: isAdmin ? colorScheme.onError : colorScheme.onTertiary,
+                              color: isAdmin
+                                  ? colorScheme.onError
+                                  : colorScheme.onTertiary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -127,6 +131,18 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               whatsappController.openWhatsApp(context);
+            },
+          ),
+
+          DrawerMenuView(
+            icon: Icons.history,
+            iconColor: Colors.amber,
+            title: 'Riwayat Pesanan',
+            subtitle: 'Lihat pesanan Anda',
+            textColor: colorScheme.onSurface,
+            onTap: () {
+              Navigator.pop(context);
+              Get.to(() => UserOrdersPage());
             },
           ),
 

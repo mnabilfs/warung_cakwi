@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../controller/cartbutton_controller.dart';
 
 class CartButtonView extends StatefulWidget {
   final int itemCount;
@@ -16,20 +14,47 @@ class CartButtonView extends StatefulWidget {
   State<CartButtonView> createState() => _CartButtonViewState();
 }
 
-class _CartButtonViewState extends State<CartButtonView> {
-  late CartButtonController controller;
+class _CartButtonViewState extends State<CartButtonView>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  late Animation<double> _scaleAnimation;
+  int _previousCount = 0;
 
   @override
   void initState() {
     super.initState();
-    controller = Get.put(CartButtonController());
-    controller.previousCount = widget.itemCount;
+    _previousCount = widget.itemCount;
+
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    // ✅ FIX: Simple Tween instead of TweenSequence
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.4).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.elasticOut),
+    );
   }
 
   @override
   void didUpdateWidget(CartButtonView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    controller.updateItemCount(widget.itemCount);
+
+    // Trigger animation only when count increases
+    if (widget.itemCount > _previousCount && !_animController.isAnimating) {
+      _animController.forward(from: 0.0).then((_) {
+        if (mounted) {
+          _animController.reverse();
+        }
+      });
+    }
+    _previousCount = widget.itemCount;
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
   }
 
   @override
@@ -49,33 +74,28 @@ class _CartButtonViewState extends State<CartButtonView> {
               right: 6,
               top: 8,
               child: IgnorePointer(
-                child: AnimatedBuilder(
-                  animation: controller.animController,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: controller.scaleAnimation.value,
-                      child: Transform.rotate(
-                        angle: controller.rotationAnimation.value,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                          child: Text(
-                            '${widget.itemCount}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
+                child: ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    child: Text(
+                      '${widget.itemCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
                       ),
-                    );
-                  },
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ),
               ),
             ),

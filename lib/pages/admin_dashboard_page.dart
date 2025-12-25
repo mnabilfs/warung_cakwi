@@ -1,9 +1,12 @@
+// lib/pages/admin_dashboard_page.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../data/controllers/admin_controller.dart';
 import '../data/controllers/auth_controller.dart';
+import '../data/controllers/order_controller.dart'; // ✅ Import OrderController
 import '../utils/price_formatter.dart';
+import 'admin_orders_page.dart'; // ✅ Import AdminOrdersPage
 
 // ✅ Helper function untuk close dialog dengan aman (avoid GetX snackbar bug)
 void _closeDialog() {
@@ -21,7 +24,6 @@ class AdminDashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -33,6 +35,24 @@ class AdminDashboardPage extends StatelessWidget {
         backgroundColor: colorScheme.surfaceContainerHighest,
         iconTheme: IconThemeData(color: colorScheme.primary),
         actions: [
+          // ✅ Tombol ke Admin Orders dengan badge
+          Obx(() {
+            final orderC = Get.find<OrderController>();
+            final pendingCount = orderC.orders
+                .where((o) => o.status == 'pending')
+                .length;
+
+            return IconButton(
+              icon: Badge(
+                label: Text('$pendingCount'),
+                isLabelVisible: pendingCount > 0,
+                child: Icon(Icons.receipt_long, color: colorScheme.primary),
+              ),
+              onPressed: () => Get.to(() => AdminOrdersPage()),
+              tooltip: 'Daftar Pesanan',
+            );
+          }),
+
           IconButton(
             icon: Icon(Icons.refresh, color: colorScheme.primary),
             onPressed: () => adminC.fetchMenuItems(),
@@ -113,7 +133,12 @@ class AdminDashboardPage extends StatelessWidget {
                     ),
                     IconButton(
                       icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _confirmDelete(context, item.id!, item.imageUrl, item.name),
+                      onPressed: () => _confirmDelete(
+                        context,
+                        item.id!,
+                        item.imageUrl,
+                        item.name,
+                      ),
                     ),
                   ],
                 ),
@@ -132,8 +157,7 @@ class AdminDashboardPage extends StatelessWidget {
 
   void _showAddDialog(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    
+
     final nameC = TextEditingController();
     final descC = TextEditingController();
     final priceC = TextEditingController();
@@ -200,7 +224,10 @@ class AdminDashboardPage extends StatelessWidget {
 
               Text(
                 'Foto Menu (Opsional)',
-                style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
               ),
               const SizedBox(height: 8),
 
@@ -283,10 +310,7 @@ class AdminDashboardPage extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => adminC.pickImageFromCamera(),
-                      icon: Icon(
-                        Icons.camera_alt,
-                        color: colorScheme.primary,
-                      ),
+                      icon: Icon(Icons.camera_alt, color: colorScheme.primary),
                       label: Text(
                         'Kamera',
                         style: TextStyle(color: colorScheme.onSurface),
@@ -307,7 +331,10 @@ class AdminDashboardPage extends StatelessWidget {
               adminC.clearSelectedImage();
               _closeDialog();
             },
-            child: Text('Batal', style: TextStyle(color: colorScheme.onSurfaceVariant)),
+            child: Text(
+              'Batal',
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -333,7 +360,10 @@ class AdminDashboardPage extends StatelessWidget {
 
               if (success) _closeDialog();
             },
-            child: Text('Simpan', style: TextStyle(color: colorScheme.onPrimary)),
+            child: Text(
+              'Simpan',
+              style: TextStyle(color: colorScheme.onPrimary),
+            ),
           ),
         ],
       ),
@@ -342,22 +372,17 @@ class AdminDashboardPage extends StatelessWidget {
 
   void _showEditDialog(BuildContext context, item) {
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    
+
     final nameC = TextEditingController(text: item.name);
     final descC = TextEditingController(text: item.description);
     final priceC = TextEditingController(text: item.price.toString());
 
-    // Reset selected image
     adminC.clearSelectedImage();
 
     Get.dialog(
       AlertDialog(
         backgroundColor: colorScheme.surfaceContainerHighest,
-        title: Text(
-          'Edit Menu',
-          style: TextStyle(color: colorScheme.primary),
-        ),
+        title: Text('Edit Menu', style: TextStyle(color: colorScheme.primary)),
         content: ConstrainedBox(
           constraints: BoxConstraints(
             maxWidth: 400,
@@ -415,16 +440,16 @@ class AdminDashboardPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Image Picker Section
                 Text(
                   'Foto Menu',
-                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
                 ),
                 const SizedBox(height: 8),
 
-                // ✅ Image Preview dengan constraint yang jelas
                 Obx(() {
-                  // Tampilkan gambar baru yang dipilih
                   if (adminC.selectedImagePath.value != null) {
                     return _buildImagePreview(
                       context: context,
@@ -436,18 +461,15 @@ class AdminDashboardPage extends StatelessWidget {
                     );
                   }
 
-                  // Tampilkan gambar existing jika ada
                   if (item.imageUrl != null && item.imageUrl!.isNotEmpty) {
                     return _buildNetworkImagePreview(context, item.imageUrl!);
                   }
 
-                  // Placeholder jika tidak ada gambar
                   return _buildPlaceholder(context);
                 }),
 
                 const SizedBox(height: 12),
 
-                // Tombol Pilih Gambar
                 Row(
                   children: [
                     Expanded(
@@ -460,7 +482,10 @@ class AdminDashboardPage extends StatelessWidget {
                         ),
                         label: Text(
                           'Galeri',
-                          style: TextStyle(color: colorScheme.onSurface, fontSize: 13),
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontSize: 13,
+                          ),
                         ),
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: colorScheme.primary),
@@ -482,7 +507,10 @@ class AdminDashboardPage extends StatelessWidget {
                         ),
                         label: Text(
                           'Kamera',
-                          style: TextStyle(color: colorScheme.onSurface, fontSize: 13),
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontSize: 13,
+                          ),
                         ),
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: colorScheme.primary),
@@ -505,7 +533,10 @@ class AdminDashboardPage extends StatelessWidget {
               adminC.clearSelectedImage();
               _closeDialog();
             },
-            child: Text('Batal', style: TextStyle(color: colorScheme.onSurfaceVariant)),
+            child: Text(
+              'Batal',
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -533,21 +564,23 @@ class AdminDashboardPage extends StatelessWidget {
 
               if (success) _closeDialog();
             },
-            child: Text('Update', style: TextStyle(color: colorScheme.onPrimary)),
+            child: Text(
+              'Update',
+              style: TextStyle(color: colorScheme.onPrimary),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // ✅ Helper widget untuk image preview dengan constraint jelas
   Widget _buildImagePreview({
     required BuildContext context,
     required Widget child,
     required VoidCallback onRemove,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return SizedBox(
       width: double.infinity,
       height: 150,
@@ -555,11 +588,7 @@ class AdminDashboardPage extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: SizedBox(
-              width: double.infinity,
-              height: 150,
-              child: child,
-            ),
+            child: SizedBox(width: double.infinity, height: 150, child: child),
           ),
           Positioned(
             top: 8,
@@ -582,10 +611,9 @@ class AdminDashboardPage extends StatelessWidget {
     );
   }
 
-  // ✅ Helper widget untuk network image dengan loading state
   Widget _buildNetworkImagePreview(BuildContext context, String imageUrl) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return SizedBox(
       width: double.infinity,
       height: 150,
@@ -598,7 +626,7 @@ class AdminDashboardPage extends StatelessWidget {
           cacheHeight: 400,
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
-            
+
             return Container(
               color: colorScheme.surfaceContainerLow,
               child: Center(
@@ -608,7 +636,7 @@ class AdminDashboardPage extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: loadingProgress.expectedTotalBytes != null
                         ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
+                              loadingProgress.expectedTotalBytes!
                         : null,
                     strokeWidth: 3,
                     color: colorScheme.primary,
@@ -648,10 +676,9 @@ class AdminDashboardPage extends StatelessWidget {
     );
   }
 
-  // ✅ Helper widget untuk placeholder
   Widget _buildPlaceholder(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Container(
       width: double.infinity,
       height: 150,
@@ -677,16 +704,18 @@ class AdminDashboardPage extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, int id, String? imageUrl, String menuName) {
+  void _confirmDelete(
+    BuildContext context,
+    int id,
+    String? imageUrl,
+    String menuName,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     Get.dialog(
       AlertDialog(
         backgroundColor: colorScheme.surfaceContainerHighest,
-        title: Text(
-          'Konfirmasi',
-          style: TextStyle(color: colorScheme.primary),
-        ),
+        title: Text('Konfirmasi', style: TextStyle(color: colorScheme.primary)),
         content: Text(
           'Yakin ingin menghapus menu "$menuName"?',
           style: TextStyle(color: colorScheme.onSurface),
@@ -694,12 +723,19 @@ class AdminDashboardPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => _closeDialog(),
-            child: Text('Batal', style: TextStyle(color: colorScheme.onSurfaceVariant)),
+            child: Text(
+              'Batal',
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: colorScheme.error),
             onPressed: () async {
-              final success = await adminC.deleteMenuItem(id, imageUrl, menuName: menuName);
+              final success = await adminC.deleteMenuItem(
+                id,
+                imageUrl,
+                menuName: menuName,
+              );
               if (success) _closeDialog();
             },
             child: Text('Hapus', style: TextStyle(color: colorScheme.onError)),

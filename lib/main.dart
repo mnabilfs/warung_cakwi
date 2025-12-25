@@ -22,6 +22,8 @@ import 'theme/app_theme.dart';
 
 import './data/controllers/weather_recommendation_controller.dart';
 
+import '../data/controllers/order_controller.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -47,6 +49,7 @@ void main() async {
   Get.put(ThemeController());
   Get.put(MenuController());
   Get.lazyPut(() => WeatherRecommendationController(), fenix: true);
+  Get.put(OrderController());
 
   final notificationHandler = NotificationHandler();
   await notificationHandler.initLocalNotification();
