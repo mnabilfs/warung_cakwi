@@ -129,6 +129,7 @@ class UserOrdersPage extends StatelessWidget {
                                 ],
                               ),
                             ),
+                            // ✅ UPDATE: Status label dengan emoji
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
@@ -139,7 +140,7 @@ class UserOrdersPage extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                orderC.getStatusLabel(order.status),
+                                '${_getStatusEmoji(order.status)} ${orderC.getStatusLabel(order.status)}',
                                 style: TextStyle(
                                   color: colorScheme.onPrimary,
                                   fontSize: 11,
@@ -210,6 +211,25 @@ class UserOrdersPage extends StatelessWidget {
         return Icons.cancel;
       default:
         return Icons.receipt;
+    }
+  }
+
+  String _getStatusEmoji(String status) {
+    switch (status) {
+      case 'pending':
+        return '⏳';
+      case 'confirmed':
+        return '✅';
+      case 'preparing':
+        return '👨‍🍳';
+      case 'ready':
+        return '🎉';
+      case 'completed':
+        return '✨';
+      case 'cancelled':
+        return '❌';
+      default:
+        return '📋';
     }
   }
 

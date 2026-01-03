@@ -283,16 +283,40 @@ class AdminOrdersPage extends StatelessWidget {
   }
 
   void _confirmCancel(int orderId) {
+    final cancelReasonController = TextEditingController();
+
     Get.dialog(
       AlertDialog(
-        title: const Text('Konfirmasi'),
-        content: const Text('Yakin ingin membatalkan pesanan ini?'),
+        title: const Text('Batalkan Pesanan'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Yakin ingin membatalkan pesanan ini?'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: cancelReasonController,
+              decoration: const InputDecoration(
+                labelText: 'Alasan pembatalan (opsional)',
+                hintText: 'Contoh: Stok habis, dll',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
         actions: [
           TextButton(onPressed: () => Get.back(), child: const Text('Tidak')),
           ElevatedButton(
             onPressed: () {
               Get.back();
-              orderC.updateOrderStatus(orderId, 'cancelled');
+              orderC.updateOrderStatus(
+                orderId,
+                'cancelled',
+                cancelReason: cancelReasonController.text.isEmpty
+                    ? null
+                    : cancelReasonController.text,
+              );
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Ya, Batalkan'),

@@ -1,4 +1,6 @@
+// lib\data\services\notification_handler.dart
 import 'dart:convert';
+import 'dart:io'; // ✅ TAMBAHKAN INI untuk Platform check
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -26,31 +28,55 @@ class NotificationHandler {
     'channel_notification',
     'High Importance Notification',
     description: 'Used For Notification',
-    importance: Importance.defaultImportance,
+    importance: Importance.max, // ✅ UBAH ke max untuk notifikasi penting
     playSound: true,
     sound: RawResourceAndroidNotificationSound('order'),
   );
 
+  /// ✅ TAMBAHKAN METHOD INI - Request notification permission untuk Android 13+
+  Future<bool> requestNotificationPermission() async {
+    if (Platform.isAndroid) {
+      final androidPlugin = _localNotification
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      
+      if (androidPlugin != null) {
+        final granted = await androidPlugin.requestNotificationsPermission();
+        print('🔔 Notification permission granted: $granted');
+        return granted ?? false;
+      }
+    }
+    return true; // iOS handles this automatically
+  }
+
   Future<void> initPushNotification() async {
-    await _firebaseMessaging.requestPermission(
+    // ✅ Request FCM permission
+    final settings = await _firebaseMessaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
+      provisional: false, // Set ke false agar permission dialog muncul
     );
 
+    print('🔔 FCM Permission status: ${settings.authorizationStatus}');
+
     _firebaseMessaging.getToken().then((token) {
-      print('FCM Token: $token');
+      print('📱 FCM Token: $token');
     });
 
     FirebaseMessaging.onBackgroundMessage(
       firebaseMessagingBackgroundHandler,
     );
 
+    // ✅ Subscribe ke topic menu_updates DAN admin_orders
     await _firebaseMessaging.subscribeToTopic('menu_updates');
+    await _firebaseMessaging.subscribeToTopic('admin_orders');
     print('📢 Subscribed to menu_updates topic');
+    print('📢 Subscribed to admin_orders topic');
 
+    // Handle initial message (app opened from terminated state)
     FirebaseMessaging.instance.getInitialMessage().then((message) {
       if (message != null) {
+        print('📬 Initial message: ${message.notification?.title}');
         _logNotification(
           message.notification?.title,
           message.notification?.body,
@@ -59,15 +85,23 @@ class NotificationHandler {
       }
     });
 
+    // Handle foreground messages
     FirebaseMessaging.onMessage.listen((message) {
       final notification = message.notification;
-      if (notification == null) return;
+      if (notification == null) {
+        print('⚠️ Received message without notification payload');
+        return;
+      }
 
+      print('📬 Foreground message: ${notification.title}');
+
+      // Show popup dialog
       _showNotificationPopup(
         title: notification.title ?? 'Notifikasi',
         body: notification.body ?? '',
       );
 
+      // Show local notification
       _localNotification.show(
         notification.hashCode,
         notification.title,
@@ -78,14 +112,33 @@ class NotificationHandler {
             _androidChannel.name,
             channelDescription: _androidChannel.description,
             icon: '@mipmap/ic_launcher',
+            importance: Importance.max,
+            priority: Priority.high,
             playSound: true,
-            sound: RawResourceAndroidNotificationSound('order'),
+            sound: const RawResourceAndroidNotificationSound('order'),
+            enableVibration: true,
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            sound: 'order.mp3',
           ),
         ),
         payload: jsonEncode(message.toMap()),
       );
 
       _logNotification(notification.title, notification.body, 'push');
+    });
+
+    // Handle message opened from background/terminated
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      print('📬 Message opened from background: ${message.notification?.title}');
+      _logNotification(
+        message.notification?.title,
+        message.notification?.body,
+        'push',
+      );
     });
   }
 
@@ -104,21 +157,40 @@ class NotificationHandler {
     await _localNotification.initialize(
       settings,
       onDidReceiveNotificationResponse: (details) {
-        print('Local notification tapped: ${details.payload}');
+        print('🔔 Local notification tapped: ${details.payload}');
       },
     );
+
+    // ✅ PERBAIKAN: Buat notification channels secara eksplisit
+    final androidPlugin = _localNotification
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    
+    if (androidPlugin != null) {
+      // Channel untuk order notifications
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'order_channel',
+          'Order Notification',
+          description: 'Notifikasi untuk pesanan',
+          importance: Importance.max,
+          playSound: true,
+          sound: RawResourceAndroidNotificationSound('order'),
+          enableVibration: true,
+        ),
+      );
+
+      // Channel untuk default notification (dari FCM)
+      await androidPlugin.createNotificationChannel(_androidChannel);
+      
+      print('✅ Notification channels created');
+    }
   }
 
   Future<void> showNotification({
     required String title,
     required String body,
   }) async {
-    // Request permission for Android 13+
-    final androidPlugin = _localNotification
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    if (androidPlugin != null) {
-      await androidPlugin.requestNotificationsPermission();
-    }
+    print('🔔 Showing local notification: $title');
 
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
@@ -132,6 +204,7 @@ class NotificationHandler {
         sound: RawResourceAndroidNotificationSound('order'),
         enableVibration: true,
         showWhen: true,
+        styleInformation: BigTextStyleInformation(''), // ✅ Untuk teks panjang
       ),
       iOS: DarwinNotificationDetails(
         presentAlert: true,
@@ -141,14 +214,19 @@ class NotificationHandler {
       ),
     );
 
-    await _localNotification.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      body,
-      details,
-    );
+    try {
+      await _localNotification.show(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        title,
+        body,
+        details,
+      );
 
-    _logNotification(title, body, 'local');
+      print('✅ Local notification shown successfully');
+      _logNotification(title, body, 'local');
+    } catch (e) {
+      print('❌ Error showing notification: $e');
+    }
   }
 
   void _showNotificationPopup({

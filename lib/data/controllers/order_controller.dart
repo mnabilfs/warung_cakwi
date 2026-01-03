@@ -125,22 +125,47 @@ class OrderController extends GetxController {
   }
 
   /// Update order status (admin only)
-  Future<bool> updateOrderStatus(int orderId, String status) async {
+  Future<bool> updateOrderStatus(
+    int orderId,
+    String status, {
+    String? cancelReason,
+  }) async {
     try {
       isLoading.value = true;
 
+      // ✅ Ambil order data dulu untuk dapatkan user_id
+      final orderData = await _supabase
+          .from('orders')
+          .select('user_id, user_email')
+          .eq('id', orderId)
+          .single();
+
+      final userId = orderData['user_id'] as String;
+      final userEmail = orderData['user_email'] as String;
+
+      // Update status di database
       await _supabase
           .from('orders')
           .update({'status': status})
           .eq('id', orderId);
 
+      // ✅ Kirim notifikasi ke user berdasarkan status
+      await _sendOrderStatusNotification(
+        userId: userId,
+        orderId: orderId,
+        status: status,
+        cancelReason: cancelReason,
+      );
+
       await fetchOrders();
 
       Get.snackbar(
         'Berhasil',
-        'Status pesanan diupdate',
+        'Status pesanan diupdate & notifikasi dikirim ke $userEmail',
         backgroundColor: Colors.green,
         colorText: Colors.white,
+        icon: const Icon(Icons.check_circle, color: Colors.white),
+        duration: const Duration(seconds: 3),
       );
 
       return true;
@@ -157,6 +182,43 @@ class OrderController extends GetxController {
       return false;
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// ✅ TAMBAHKAN method helper untuk kirim notifikasi
+  Future<void> _sendOrderStatusNotification({
+    required String userId,
+    required int orderId,
+    required String status,
+    String? cancelReason,
+  }) async {
+    try {
+      switch (status) {
+        case 'confirmed':
+          await _fcmService.notifyOrderConfirmed(userId, orderId);
+          break;
+        case 'preparing':
+          await _fcmService.notifyOrderPreparing(userId, orderId);
+          break;
+        case 'ready':
+          await _fcmService.notifyOrderReady(userId, orderId);
+          break;
+        case 'completed':
+          await _fcmService.notifyOrderCompleted(userId, orderId);
+          break;
+        case 'cancelled':
+          await _fcmService.notifyOrderCancelled(userId, orderId, cancelReason);
+          break;
+      }
+
+      if (kDebugMode) {
+        print('✅ Order status notification sent to user $userId');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ Failed to send order status notification: $e');
+      }
+      // Tidak throw error agar update status tetap berhasil
     }
   }
 

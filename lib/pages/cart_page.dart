@@ -380,5 +380,6 @@ class _CartPageState extends State<CartPage> {
       title: 'Pesanan Berhasil! 🎉',
       body: 'Pesanan Anda sedang diproses. Metode pembayaran: $methodText',
     );
+    print('🔔 Local notification should be shown now!');
   }
 }
